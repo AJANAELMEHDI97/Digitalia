@@ -1,0 +1,63 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: socialpulse-db
+    environment:
+      POSTGRES_DB: socialpulse
+      POSTGRES_USER: socialpulse
+      POSTGRES_PASSWORD: socialpulse
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U socialpulse -d socialpulse"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./apps/api
+    container_name: socialpulse-api
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PORT: 4000
+      DATABASE_URL: postgresql://socialpulse:socialpulse@db:5432/socialpulse
+      JWT_SECRET: ${JWT_SECRET:-socialpulse-docker-secret}
+      SOCIAL_TOKEN_SECRET: ${SOCIAL_TOKEN_SECRET:-socialpulse-social-secret}
+      ENABLE_LINKEDIN_PUBLISHING: ${ENABLE_LINKEDIN_PUBLISHING:-false}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:8080}
+      API_PUBLIC_URL: ${API_PUBLIC_URL:-http://localhost:4000}
+      UPLOADS_DIR: /app/uploads
+      LINKEDIN_CLIENT_ID: ${LINKEDIN_CLIENT_ID:-}
+      LINKEDIN_CLIENT_SECRET: ${LINKEDIN_CLIENT_SECRET:-}
+      LINKEDIN_REDIRECT_URI: ${LINKEDIN_REDIRECT_URI:-}
+      META_CLIENT_ID: ${META_CLIENT_ID:-}
+      META_CLIENT_SECRET: ${META_CLIENT_SECRET:-}
+      META_REDIRECT_URI: ${META_REDIRECT_URI:-}
+      META_FACEBOOK_REDIRECT_URI: ${META_FACEBOOK_REDIRECT_URI:-}
+      META_INSTAGRAM_REDIRECT_URI: ${META_INSTAGRAM_REDIRECT_URI:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-}
+    ports:
+      - "4000:4000"
+    volumes:
+      - uploads-data:/app/uploads
+
+  web:
+    build:
+      context: ./apps/web
+    container_name: socialpulse-web
+    depends_on:
+      - api
+    ports:
+      - "8080:80"
+
+volumes:
+  postgres-data:
+  uploads-data:

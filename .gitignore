@@ -1,0 +1,17 @@
+.env
+node_modules
+dist
+uploads
+.DS_Store
+coverage
+apps/api/node_modules
+apps/web/node_modules
+apps/api/dist
+postgres-data
+.edge-profile
+.edge-profile-visual
+.vendor
+recovery
+database/backup.sql
+!apps/web/dist/
+!apps/web/dist/**
