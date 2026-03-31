@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ClipboardList, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { TOKEN_STORAGE_KEY } from "@/lib/local-auth";
 
 interface AuditEntry {
   id: string;
@@ -34,6 +35,34 @@ const anomalyActions = ["reject", "escalate", "refused"];
 
 export function AdminActivityLog({ entries, loading }: AdminActivityLogProps) {
   const [filter, setFilter] = useState<"all" | "anomalies">("all");
+
+  async function handleExportCSV() {
+    try {
+      const token = typeof window !== "undefined" ? window.localStorage.getItem(TOKEN_STORAGE_KEY) : null;
+      const headers: Record<string, string> = {} as any;
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
+      const res = await fetch("/api/admin/logs?format=csv", { headers });
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(text || "Erreur lors de l'export CSV");
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `activity_logs_${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error(err);
+      alert("Impossible d'exporter le journal");
+    }
+  }
 
   const filteredEntries =
     filter === "anomalies"
@@ -115,9 +144,17 @@ export function AdminActivityLog({ entries, loading }: AdminActivityLogProps) {
               </div>
             ))}
 
-            <button className="pt-2 text-[16px] font-medium text-[#5442d3] transition-colors hover:text-[#4334b2]">
-              Voir tout →
-            </button>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleExportCSV}
+                className="rounded-full border border-[#dfe3f2] bg-white px-4 py-2 text-[15px] font-medium text-[#5442d3] hover:bg-[#f5f6fc]"
+              >
+                Exporter CSV
+              </button>
+              <button className="pt-2 text-[16px] font-medium text-[#5442d3] transition-colors hover:text-[#4334b2]">
+                Voir tout →
+              </button>
+            </div>
           </div>
         )}
       </CardContent>

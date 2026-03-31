@@ -5,10 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { ScrollText } from "lucide-react";
 import { AdminActivityLog } from "@/components/dashboard/admin/AdminActivityLog";
 import { useAdminDashboard } from "@/hooks/useAdminDashboard";
+import { useAdminLogs } from "@/hooks/useAdminLogs";
 
 export default function AdminAuditPage() {
   const { isAdmin, loading } = useSimpleRole();
-  const { activityLog, loading: dataLoading } = useAdminDashboard();
+  const { activityLog: fallbackActivityLog, loading: fallbackLoading } = useAdminDashboard();
+  const { data: activityLogFromApi = [], isLoading: apiLoading } = useAdminLogs();
+  const activityLog = activityLogFromApi.length ? activityLogFromApi as any : (fallbackActivityLog as any);
+  const dataLoading = apiLoading || fallbackLoading;
 
   if (!loading && !isAdmin) return <Navigate to="/dashboard" replace />;
 

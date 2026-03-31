@@ -1,11 +1,13 @@
 services:
   db:
-    image: postgres:16-alpine
+    image: postgres:16
     container_name: socialpulse-db
     environment:
       POSTGRES_DB: socialpulse
       POSTGRES_USER: socialpulse
       POSTGRES_PASSWORD: socialpulse
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
     ports:
       - "5432:5432"
     volumes:
@@ -44,6 +46,8 @@ services:
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-}
+      # Disable public signup by default in dev/dev-preview to match CDC requirements
+      ALLOW_PUBLIC_SIGNUP: 'false'
     ports:
       - "4000:4000"
     volumes:

@@ -8,8 +8,14 @@ export const parseOrRespond = <T extends z.ZodTypeAny>(
 ): z.infer<T> | null => {
     const result = schema.safeParse(input);
     if (!result.success) {
+        const errors = result.error.issues.map((issue) => ({
+            path: issue.path.length ? issue.path.join(".") : "_",
+            message: issue.message,
+            code: issue.code,
+        }));
         response.status(400).json({
             message: "Donnees invalides.",
+            errors,
             issues: result.error.issues,
         });
         return null;

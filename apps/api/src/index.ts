@@ -23,6 +23,7 @@ import { postsRouter, publishDueScheduledPosts } from "./routes/posts.js";
 import { profileRouter } from "./routes/profile.js";
 import { rulesRouter } from "./routes/rules.js";
 import { trendsRouter } from "./routes/trends.js";
+import { adminLogsRouter } from "./routes/adminLogs.js";
 const app = express();
 app.disable("x-powered-by");
 app.set("trust proxy", 1);
@@ -74,6 +75,7 @@ app.use("/organization", organizationRouter);
 app.use("/notifications", notificationsRouter);
 app.use("/integrations", integrationsRouter);
 app.use("/global-rules", rulesRouter);
+app.use("/admin/logs", adminLogsRouter);
 app.use((_request, response) => {
     return response.status(404).json({
         message: "Route introuvable.",

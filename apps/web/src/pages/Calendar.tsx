@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { addMonths, subMonths, format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, Plus, Calendar as CalendarIcon, TrendingUp, MessageCircle, Sparkles, Building2, Users, Kanban, ChevronDown, Check } from "lucide-react";
