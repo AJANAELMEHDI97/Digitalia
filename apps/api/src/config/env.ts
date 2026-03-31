@@ -11,7 +11,7 @@ const envSchema = z.object({
     SOCIAL_TOKEN_SECRET: z.string().default("socialpulse-social-secret"),
     ENABLE_LINKEDIN_PUBLISHING: z
         .string()
-        .default("false")
+        .default("true")
         .transform((value) => value.toLowerCase() === "true"),
     FRONTEND_URL: z.string().default("http://localhost:8080"),
     API_PUBLIC_URL: z.string().default(""),

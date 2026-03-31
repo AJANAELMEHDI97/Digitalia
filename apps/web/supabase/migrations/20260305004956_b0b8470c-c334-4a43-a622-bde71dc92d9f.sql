@@ -1,0 +1,1 @@
+ALTER TABLE public.publications ADD COLUMN IF NOT EXISTS priority text DEFAULT 'routine';

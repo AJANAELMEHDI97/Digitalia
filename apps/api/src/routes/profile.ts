@@ -3,6 +3,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { pool } from "../db/pool.js";
 import { logEvent } from "../lib/logs.js";
+import { parseOrRespond } from "../lib/validation.js";
 import { requireAuth } from "../middleware/auth.js";
 const notificationPreferencesSchema = z.object({
     email: z.boolean(),
@@ -128,7 +129,9 @@ profileRouter.get("/profile", async (request, response) => {
     });
 });
 profileRouter.put("/profile", async (request, response) => {
-    const input = profileSchema.parse(request.body);
+    const input = parseOrRespond(profileSchema, request.body, response);
+    if (!input)
+        return;
     const result = await pool.query(`
       UPDATE users
       SET
@@ -166,7 +169,9 @@ profileRouter.put("/profile", async (request, response) => {
     return response.json(result.rows[0]);
 });
 profileRouter.put("/security", async (request, response) => {
-    const input = securitySchema.parse(request.body);
+    const input = parseOrRespond(securitySchema, request.body, response);
+    if (!input)
+        return;
     const current = await pool.query(`
       SELECT password_hash AS "passwordHash"
       FROM users

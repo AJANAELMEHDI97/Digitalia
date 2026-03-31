@@ -1,0 +1,13 @@
+<svg width="220" height="220" viewBox="0 0 220 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="220" height="220" rx="28" fill="white"/>
+  <g transform="translate(0 4)">
+    <path
+      d="M110 34 L162 34 A52 52 0 1 0 110 86 Z"
+      fill="#4A36C7"
+    />
+    <path
+      d="M110 98 L58 98 A52 52 0 1 0 110 46 Z"
+      fill="#F14AA5"
+    />
+  </g>
+</svg>

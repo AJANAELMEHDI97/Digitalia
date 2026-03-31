@@ -1,5 +1,6 @@
 import { pool } from "../db/pool.js";
 import { verifyToken } from "../lib/jwt.js";
+import { normalizePlatformRole } from "../lib/roles.js";
 export const requireAuth = async (request, response, next) => {
     const header = request.headers.authorization;
     if (!header?.startsWith("Bearer ")) {
@@ -21,7 +22,10 @@ export const requireAuth = async (request, response, next) => {
         if (!result.rowCount) {
             return response.status(401).json({ message: "Session invalide." });
         }
-        request.user = result.rows[0];
+        request.user = {
+            ...result.rows[0],
+            role: normalizePlatformRole(result.rows[0].role),
+        };
         next();
     }
     catch {
@@ -29,7 +33,7 @@ export const requireAuth = async (request, response, next) => {
     }
 };
 export const requireRole = (allowedRoles) => (request, response, next) => {
-    if (!request.user || !allowedRoles.includes(request.user.role)) {
+    if (!request.user || !allowedRoles.includes(normalizePlatformRole(request.user.role))) {
         return response
             .status(403)
             .json({ message: "Vous n'avez pas les permissions necessaires." });

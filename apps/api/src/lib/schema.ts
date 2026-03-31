@@ -5,7 +5,57 @@ export const ensureApplicationSchema = async () => {
         await client.query("BEGIN");
         await client.query(`
       ALTER TABLE posts
+      ADD COLUMN IF NOT EXISTS law_firm_id TEXT
+    `);
+        await client.query(`
+      ALTER TABLE posts
+      ADD COLUMN IF NOT EXISTS source TEXT NOT NULL DEFAULT 'manual'
+    `);
+        await client.query(`
+      ALTER TABLE posts
+      ADD COLUMN IF NOT EXISTS image_url TEXT
+    `);
+        await client.query(`
+      ALTER TABLE posts
+      ADD COLUMN IF NOT EXISTS parent_id UUID
+    `);
+        await client.query(`
+      ALTER TABLE posts
+      ADD COLUMN IF NOT EXISTS priority TEXT DEFAULT 'routine'
+    `);
+        await client.query(`
+      ALTER TABLE posts
+      ADD COLUMN IF NOT EXISTS rejection_reason TEXT
+    `);
+        await client.query(`
+      ALTER TABLE posts
+      ADD COLUMN IF NOT EXISTS rejected_at TIMESTAMPTZ
+    `);
+        await client.query(`
+      ALTER TABLE posts
+      ADD COLUMN IF NOT EXISTS modification_request_comment TEXT
+    `);
+        await client.query(`
+      ALTER TABLE posts
       ADD COLUMN IF NOT EXISTS target_connections JSONB NOT NULL DEFAULT '[]'::jsonb
+    `);
+        await client.query(`
+      ALTER TABLE posts
+      DROP CONSTRAINT IF EXISTS posts_source_check
+    `);
+        await client.query(`
+      ALTER TABLE posts
+      ADD CONSTRAINT posts_source_check
+      CHECK (source IN ('manual', 'socialpulse'))
+    `);
+        await client.query(`
+      ALTER TABLE posts
+      DROP CONSTRAINT IF EXISTS posts_priority_check
+    `);
+        await client.query(`
+      ALTER TABLE posts
+      ADD CONSTRAINT posts_priority_check
+      CHECK (priority IN ('routine', 'important', 'strategique'))
     `);
         await client.query(`
       CREATE TABLE IF NOT EXISTS social_connections (
@@ -80,6 +130,10 @@ export const ensureApplicationSchema = async () => {
         await client.query(`
       CREATE INDEX IF NOT EXISTS idx_post_publications_post
       ON post_publications (post_id, provider, created_at DESC)
+    `);
+        await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_posts_org_firm_status
+      ON posts (organization_id, law_firm_id, status)
     `);
         await client.query(`
       INSERT INTO integrations (organization_id, name, kind, status, sync_frequency, details, last_sync_at)

@@ -68,7 +68,7 @@ export const seedDatabase = async () => {
         RETURNING id
       `);
         const organizationId = organizationResult.rows[0].id;
-        const passwordHash = await bcrypt.hash("demo1234", 10);
+        const primaryPasswordHash = await bcrypt.hash("Nassima123", 10);
         const usersResult = await client.query(`
         INSERT INTO users (
           organization_id,
@@ -86,57 +86,28 @@ export const seedDatabase = async () => {
         VALUES
           (
             $1,
-            'Nadia Bennani',
-            'admin@socialpulse.local',
+            'Nassima Elhattabi',
+            'nassimelhattabi@gmail.com',
             $2,
-            'admin',
-            'Operations Director',
-            'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80',
-            'Pilote la gouvernance editoriale et valide les campagnes.',
+            'editor',
+            'Community Manager',
+            'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80',
+            'Pilote la production editoriale et la coordination des contenus SocialPulse.',
             '["workspace","channels","calendar","metrics"]'::jsonb,
             'aurora',
             '{"email": true, "push": true, "dailyDigest": true}'::jsonb
-          ),
-          (
-            $1,
-            'Sara El Idrissi',
-            'editor@socialpulse.local',
-            $2,
-            'editor',
-            'Social Media Manager',
-            'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80',
-            'Coordonne la publication, la moderation et la production quotidienne.',
-            '["workspace","channels"]'::jsonb,
-            'aurora',
-            '{"email": true, "push": true, "dailyDigest": false}'::jsonb
-          ),
-          (
-            $1,
-            'Youssef Haddad',
-            'reader@socialpulse.local',
-            $2,
-            'reader',
-            'Performance Analyst',
-            'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=300&q=80',
-            'Analyse les KPIs et partage les recommandations d''optimisation.',
-            '["workspace"]'::jsonb,
-            'aurora',
-            '{"email": false, "push": true, "dailyDigest": true}'::jsonb
           )
         RETURNING id, role, email
-      `, [organizationId, passwordHash]);
-        const adminUserId = usersResult.rows.find((user) => user.role === "admin")?.id ??
+      `, [organizationId, primaryPasswordHash]);
+        const primaryUserId = usersResult.rows.find((user) => user.role === "editor")?.id ??
             usersResult.rows[0].id;
-        const editorUserId = usersResult.rows.find((user) => user.role === "editor")?.id ??
-            usersResult.rows[0].id;
-        const readerUserId = usersResult.rows.find((user) => user.role === "reader")?.id ??
-            usersResult.rows[0].id;
+        const editorUserId = primaryUserId;
+        const readerUserId = primaryUserId;
         await client.query(`
         INSERT INTO dashboard_preferences (user_id, layout)
         VALUES
-          ($1, '{"hero":["performance","calendar"],"secondary":["approvals","trends","notifications"]}'::jsonb),
-          ($2, '{"hero":["calendar","inbox"],"secondary":["approvals","media","trends"]}'::jsonb)
-      `, [adminUserId, editorUserId]);
+          ($1, '{"hero":["performance","calendar"],"secondary":["approvals","trends","notifications"]}'::jsonb)
+      `, [primaryUserId]);
         await client.query(`
         INSERT INTO integrations (organization_id, name, kind, status, sync_frequency, details, last_sync_at)
         VALUES
@@ -164,7 +135,7 @@ export const seedDatabase = async () => {
           ($1, 'Revue approvals LinkedIn', 'Validation finale des posts du mardi.', NOW() + INTERVAL '2 days', NOW() + INTERVAL '2 days 1 hour', 'approval', 'pending', 'linkedin', $3, 'Africa/Casablanca', '{"color":"#70f0b8"}'::jsonb),
           ($1, 'Publication Reel studio', 'Storytelling video pour Instagram.', NOW() + INTERVAL '3 days', NOW() + INTERVAL '3 days 30 minutes', 'post', 'scheduled', 'instagram', $3, 'Africa/Casablanca', '{"color":"#7a8cff"}'::jsonb),
           ($1, 'Point KPI mensuel', 'Synthese performance et recommandations.', NOW() + INTERVAL '5 days', NOW() + INTERVAL '5 days 90 minutes', 'meeting', 'scheduled', 'internal', $4, 'Africa/Casablanca', '{"color":"#f6d06f"}'::jsonb)
-      `, [organizationId, adminUserId, editorUserId, readerUserId]);
+      `, [organizationId, primaryUserId, editorUserId, readerUserId]);
         for (const media of sampleMedia) {
             await client.query(`
           INSERT INTO media_items (
@@ -272,7 +243,7 @@ export const seedDatabase = async () => {
         INSERT INTO post_approvals (post_id, requested_by, reviewer_id, status, comment)
         VALUES
           ($1, $2, $3, 'pending', 'Merci de valider le wording et le CTA principal.')
-      `, [pendingPostId, editorUserId, adminUserId]);
+      `, [pendingPostId, editorUserId, primaryUserId]);
         await client.query(`
         INSERT INTO metrics_snapshots (
           organization_id,
@@ -329,7 +300,7 @@ export const seedDatabase = async () => {
           ($1, 'linkedin', 'Karim RH', 'assigned', 'medium', $3, NOW() - INTERVAL '1 hour', 1, '["partnership"]'::jsonb),
           ($1, 'facebook', 'Salma Agency', 'closed', 'low', $2, NOW() - INTERVAL '1 day', 0, '["support"]'::jsonb)
         RETURNING id
-      `, [organizationId, editorUserId, adminUserId]);
+      `, [organizationId, editorUserId, primaryUserId]);
         for (const conversation of conversationResult.rows) {
             await client.query(`
           INSERT INTO messages (conversation_id, sender_type, content)
@@ -355,7 +326,7 @@ export const seedDatabase = async () => {
           ($1, $2, 'integration', 'Instagram necessite une reconnexion', 'Le token Instagram Business expire bientot. Verifiez les permissions.', 'medium', '/app/integrations', FALSE, FALSE),
           ($1, $3, 'inbox', 'Nouveau message client prioritaire', 'Amina B. demande un devis pour la gestion de communaute.', 'high', '/app/inbox', FALSE, FALSE),
           ($1, $2, 'digest', 'Resume quotidien pret', 'Vos metriques et taches cles sont a jour.', 'low', '/app/dashboard', TRUE, FALSE)
-      `, [organizationId, adminUserId, editorUserId]);
+      `, [organizationId, primaryUserId, editorUserId]);
         await client.query(`
         INSERT INTO global_rules (
           organization_id,
@@ -369,14 +340,14 @@ export const seedDatabase = async () => {
         VALUES
           ($1, 'Validation obligatoire pour les posts multi-plateformes', 'posts', 'active', '{"platformCount":{"gte":2}}'::jsonb, '{"requireApproval":true}'::jsonb, $2),
           ($1, 'Archivage auto des notifications faibles apres 14 jours', 'notifications', 'active', '{"priority":"low","ageDays":{"gte":14}}'::jsonb, '{"archive":true}'::jsonb, $2)
-      `, [organizationId, adminUserId]);
+      `, [organizationId, primaryUserId]);
         await client.query(`
         INSERT INTO activity_logs (organization_id, actor_user_id, event_key, context)
         VALUES
           ($1, $2, 'workspace_seeded', '{"source":"bootstrap"}'::jsonb),
           ($1, $2, 'dashboard_viewed', '{"seed":true}'::jsonb),
           ($1, $3, 'post_approval_requested', '{"postTitle":"Serie conseils community management"}'::jsonb)
-      `, [organizationId, adminUserId, editorUserId]);
+      `, [organizationId, primaryUserId, editorUserId]);
         await client.query("COMMIT");
     }
     catch (error) {

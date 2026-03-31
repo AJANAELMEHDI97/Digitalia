@@ -1,0 +1,336 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==========================================================================
+   SocialPulse Design System v3
+   LegalTech Premium — Violet + Fuchsia identity
+   
+   PALETTE:
+   - Primary (Violet): #4C3BBF — Actions, focus, active states
+   - Accent (Fuchsia): #E0418E — IA, Beta, Upsell
+   - Success: #16B364 — Validated, good performance
+   - Warning: #F79009 — Pending, attention needed
+   - Error: #F04438 — Errors, critical alerts
+   - Info: #2E90FA — Informational
+   ========================================================================== */
+
+@layer base {
+  :root {
+    /* ===== FONDAMENTAUX ===== */
+    --background: 228 45% 97%;
+    --foreground: 236 19% 14%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 236 19% 14%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 236 19% 14%;
+
+    /* ===== PRIMARY (Violet SocialPulse) ===== */
+    --primary: 248 52% 49%;
+    --primary-foreground: 0 0% 100%;
+
+    /* ===== SECONDARY ===== */
+    --secondary: 228 50% 96%;
+    --secondary-foreground: 230 11% 47%;
+
+    /* ===== ACCENT ===== */
+    --accent: 228 50% 96%;
+    --accent-foreground: 230 11% 47%;
+
+    /* ===== ACCENT BRAND (Fuchsia) ===== */
+    --accent-brand: 330 72% 57%;
+    --accent-brand-foreground: 0 0% 100%;
+
+    /* ===== NEUTRES ===== */
+    --muted: 228 50% 96%;
+    --muted-foreground: 228 13% 66%;
+
+    /* ===== DESTRUCTIVE ===== */
+    --destructive: 4 86% 58%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* ===== BORDURES & INPUTS ===== */
+    --border: 228 38% 92%;
+    --input: 228 38% 92%;
+    --ring: 249 63% 56%;
+
+    --radius: 0.75rem;
+
+    /* ===== SIDEBAR ===== */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 228 13% 66%;
+    --sidebar-primary: 248 52% 49%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 245 72% 95%;
+    --sidebar-accent-foreground: 248 52% 49%;
+    --sidebar-border: 228 38% 92%;
+    --sidebar-ring: 249 63% 56%;
+
+    /* ===== STATUTS HARMONISÉS ===== */
+    --status-draft-bg: 228 50% 96%;
+    --status-draft-text: 228 13% 66%;
+    --status-draft-border: 228 38% 92%;
+    
+    --status-pending-bg: 34 93% 95%;
+    --status-pending-text: 34 93% 40%;
+    --status-pending-border: 34 80% 78%;
+    
+    --status-scheduled-bg: 152 78% 95%;
+    --status-scheduled-text: 152 78% 32%;
+    --status-scheduled-border: 152 50% 78%;
+    
+    --status-published-bg: 213 96% 95%;
+    --status-published-text: 213 96% 38%;
+    --status-published-border: 213 60% 78%;
+    
+    --status-refused-bg: 4 86% 96%;
+    --status-refused-text: 4 86% 45%;
+    --status-refused-border: 4 60% 80%;
+
+    /* ===== SENSIBILITÉ ===== */
+    --sensitivity-opportune-bg: 152 78% 95%;
+    --sensitivity-opportune-text: 152 78% 32%;
+    --sensitivity-watch-bg: 34 93% 95%;
+    --sensitivity-watch-text: 34 93% 40%;
+    --sensitivity-avoid-bg: 4 86% 96%;
+    --sensitivity-avoid-text: 4 86% 45%;
+
+    /* ===== PERFORMANCE ===== */
+    --perf-good-bg: 152 78% 95%;
+    --perf-good-text: 152 78% 32%;
+    --perf-average-bg: 34 93% 95%;
+    --perf-average-text: 34 93% 40%;
+    --perf-poor-bg: 4 86% 96%;
+    --perf-poor-text: 4 86% 45%;
+
+    /* ===== DATES CLÉS ===== */
+    --keydate-bg: 248 52% 96%;
+    --keydate-text: 248 52% 45%;
+    --keydate-border: 248 40% 82%;
+
+    /* ===== ÉVÉNEMENTS ===== */
+    --event-bg: 34 80% 96%;
+    --event-text: 34 80% 38%;
+    --event-border: 34 60% 80%;
+
+    /* ===== BLOG ===== */
+    --blog-bg: 330 72% 96%;
+    --blog-text: 330 72% 45%;
+    --blog-border: 330 40% 82%;
+
+    /* ===== PLATEFORMES ===== */
+    --platform-linkedin: 201 100% 35%;
+    --platform-instagram: 340 75% 54%;
+    --platform-facebook: 221 44% 41%;
+    --platform-twitter: 203 89% 53%;
+    --platform-blog: 330 72% 57%;
+
+    /* ===== CHART TOKENS ===== */
+    --chart-stroke: 248 52% 49%;
+    --chart-fill-start: 248 52% 49%;
+    --chart-fill-end: 245 72% 95%;
+    --chart-grid: 228 38% 92%;
+    --chart-text: 228 13% 66%;
+  }
+
+  .dark {
+    --background: 236 25% 6%;
+    --foreground: 0 0% 95%;
+
+    --card: 236 25% 8%;
+    --card-foreground: 0 0% 95%;
+
+    --popover: 236 25% 8%;
+    --popover-foreground: 0 0% 95%;
+
+    --primary: 248 52% 55%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 236 20% 14%;
+    --secondary-foreground: 228 14% 80%;
+
+    --accent: 236 20% 14%;
+    --accent-foreground: 228 14% 80%;
+
+    --accent-brand: 330 72% 60%;
+    --accent-brand-foreground: 0 0% 100%;
+
+    --muted: 236 20% 14%;
+    --muted-foreground: 228 13% 60%;
+
+    --destructive: 4 86% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 236 20% 18%;
+    --input: 236 20% 18%;
+    --ring: 249 63% 56%;
+
+    --sidebar-background: 236 25% 8%;
+    --sidebar-foreground: 228 13% 60%;
+    --sidebar-primary: 248 52% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 248 40% 18%;
+    --sidebar-accent-foreground: 248 52% 75%;
+    --sidebar-border: 236 20% 16%;
+    --sidebar-ring: 249 63% 56%;
+
+    /* Statuts dark mode */
+    --status-draft-bg: 228 14% 18%;
+    --status-draft-text: 228 13% 65%;
+    --status-draft-border: 228 13% 25%;
+    --status-pending-bg: 34 50% 15%;
+    --status-pending-text: 34 93% 65%;
+    --status-pending-border: 34 50% 30%;
+    --status-scheduled-bg: 152 40% 15%;
+    --status-scheduled-text: 152 78% 65%;
+    --status-scheduled-border: 152 40% 30%;
+    --status-published-bg: 213 50% 15%;
+    --status-published-text: 213 96% 65%;
+    --status-published-border: 213 50% 30%;
+    --status-refused-bg: 4 50% 15%;
+    --status-refused-text: 4 86% 65%;
+    --status-refused-border: 4 50% 30%;
+
+    --sensitivity-opportune-bg: 152 40% 15%;
+    --sensitivity-opportune-text: 152 78% 65%;
+    --sensitivity-watch-bg: 34 50% 15%;
+    --sensitivity-watch-text: 34 93% 65%;
+    --sensitivity-avoid-bg: 4 50% 15%;
+    --sensitivity-avoid-text: 4 86% 65%;
+
+    --perf-good-bg: 152 40% 15%;
+    --perf-good-text: 152 78% 65%;
+    --perf-average-bg: 34 50% 15%;
+    --perf-average-text: 34 93% 65%;
+    --perf-poor-bg: 4 50% 15%;
+    --perf-poor-text: 4 86% 65%;
+
+    --keydate-bg: 248 40% 18%;
+    --keydate-text: 248 52% 75%;
+    --keydate-border: 248 40% 30%;
+    --event-bg: 34 50% 15%;
+    --event-text: 34 80% 65%;
+    --event-border: 34 50% 30%;
+    --blog-bg: 330 40% 18%;
+    --blog-text: 330 72% 75%;
+    --blog-border: 330 40% 30%;
+
+    --platform-blog: 330 72% 65%;
+
+    --chart-stroke: 248 52% 60%;
+    --chart-fill-start: 248 52% 60%;
+    --chart-fill-end: 248 52% 15%;
+    --chart-grid: 236 20% 18%;
+    --chart-text: 228 13% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  /* Custom scrollbar — minimal */
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full hover:bg-muted-foreground/25;
+  }
+}
+
+/* ==========================================================================
+   UTILITY CLASSES
+   ========================================================================== */
+
+@layer components {
+  /* Status classes */
+  .status-draft {
+    background-color: hsl(var(--status-draft-bg));
+    color: hsl(var(--status-draft-text));
+    border-color: hsl(var(--status-draft-border));
+  }
+  .status-pending {
+    background-color: hsl(var(--status-pending-bg));
+    color: hsl(var(--status-pending-text));
+    border-color: hsl(var(--status-pending-border));
+  }
+  .status-scheduled {
+    background-color: hsl(var(--status-scheduled-bg));
+    color: hsl(var(--status-scheduled-text));
+    border-color: hsl(var(--status-scheduled-border));
+  }
+  .status-published {
+    background-color: hsl(var(--status-published-bg));
+    color: hsl(var(--status-published-text));
+    border-color: hsl(var(--status-published-border));
+  }
+  .status-refused {
+    background-color: hsl(var(--status-refused-bg));
+    color: hsl(var(--status-refused-text));
+    border-color: hsl(var(--status-refused-border));
+  }
+
+  /* Sensitivity */
+  .sensitivity-opportune {
+    background-color: hsl(var(--sensitivity-opportune-bg));
+    color: hsl(var(--sensitivity-opportune-text));
+  }
+  .sensitivity-watch {
+    background-color: hsl(var(--sensitivity-watch-bg));
+    color: hsl(var(--sensitivity-watch-text));
+  }
+  .sensitivity-avoid {
+    background-color: hsl(var(--sensitivity-avoid-bg));
+    color: hsl(var(--sensitivity-avoid-text));
+  }
+
+  /* Performance */
+  .perf-good {
+    background-color: hsl(var(--perf-good-bg));
+    color: hsl(var(--perf-good-text));
+  }
+  .perf-average {
+    background-color: hsl(var(--perf-average-bg));
+    color: hsl(var(--perf-average-text));
+  }
+  .perf-poor {
+    background-color: hsl(var(--perf-poor-bg));
+    color: hsl(var(--perf-poor-text));
+  }
+
+  /* Calendar elements */
+  .keydate {
+    background-color: hsl(var(--keydate-bg));
+    color: hsl(var(--keydate-text));
+    border-color: hsl(var(--keydate-border));
+  }
+  .judicial-event {
+    background-color: hsl(var(--event-bg));
+    color: hsl(var(--event-text));
+    border-color: hsl(var(--event-border));
+  }
+  .blog-article {
+    background-color: hsl(var(--blog-bg));
+    color: hsl(var(--blog-text));
+    border-color: hsl(var(--blog-border));
+  }
+
+  /* Auth gradient */
+  .gradient-purple {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(247 76% 64%) 100%);
+  }
+}

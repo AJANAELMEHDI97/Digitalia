@@ -2,6 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { pool } from "../db/pool.js";
 import { logEvent } from "../lib/logs.js";
+import { parseOrRespond } from "../lib/validation.js";
 import { requireAuth } from "../middleware/auth.js";
 const eventSchema = z.object({
     title: z.string().min(3),
@@ -35,7 +36,9 @@ calendarRouter.get("/events", async (request, response) => {
     return response.json(result.rows);
 });
 calendarRouter.post("/events", async (request, response) => {
-    const input = eventSchema.parse(request.body);
+    const input = parseOrRespond(eventSchema, request.body, response);
+    if (!input)
+        return;
     if (new Date(input.endAt) <= new Date(input.startAt)) {
         return response
             .status(400)

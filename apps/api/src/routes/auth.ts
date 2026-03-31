@@ -4,6 +4,8 @@ import { z } from "zod";
 import { pool } from "../db/pool.js";
 import { signToken } from "../lib/jwt.js";
 import { logEvent } from "../lib/logs.js";
+import { dbRoleFromPlatformRole, normalizePlatformRole } from "../lib/roles.js";
+import { parseOrRespond } from "../lib/validation.js";
 import { requireAuth } from "../middleware/auth.js";
 import { createRateLimit } from "../middleware/rateLimit.js";
 const registerSchema = z.object({
@@ -20,6 +22,16 @@ const onboardingSchema = z.object({
     step: z.string().min(2),
 });
 export const authRouter = Router();
+const serializeAuthUser = (user: Record<string, any>, overrides: Record<string, any> = {}) => {
+    const safeOverrides = overrides;
+    const { passwordHash, password_hash, ...safeUser } = user;
+    const normalizedRole = normalizePlatformRole(safeOverrides.role ?? user.role);
+    return {
+        ...safeUser,
+        ...safeOverrides,
+        role: normalizedRole,
+    };
+};
 const getAuthKey = (request) => {
     const rawEmail = typeof request.body?.email === "string" ? request.body.email.toLowerCase() : "anon";
     return `${request.ip}:${rawEmail}`;
@@ -37,7 +49,9 @@ const registerRateLimit = createRateLimit({
     keyFn: getAuthKey,
 });
 authRouter.post("/register", registerRateLimit, async (request, response) => {
-    const input = registerSchema.parse(request.body);
+    const input = parseOrRespond(registerSchema, request.body, response);
+    if (!input)
+        return;
     const existing = await pool.query("SELECT id FROM users WHERE email = $1", [
         input.email.toLowerCase(),
     ]);
@@ -79,7 +93,7 @@ authRouter.post("/register", registerRateLimit, async (request, response) => {
           $3,
           $4,
           'admin',
-          'Workspace Owner',
+          'Super Admin',
           '["workspace"]'::jsonb,
           'aurora',
           '{"email":true,"push":true,"dailyDigest":true}'::jsonb
@@ -107,21 +121,19 @@ authRouter.post("/register", registerRateLimit, async (request, response) => {
             eventKey: "user_registered",
             context: { email: userResult.rows[0].email },
         });
+        const registeredUser = serializeAuthUser(userResult.rows[0], {
+            fullName: input.fullName,
+            organizationId,
+        });
         const token = signToken({
             sub: userResult.rows[0].id,
             organizationId,
-            role: userResult.rows[0].role,
+            role: registeredUser.role,
             email: userResult.rows[0].email,
         });
         return response.status(201).json({
             token,
-            user: {
-                id: userResult.rows[0].id,
-                fullName: input.fullName,
-                email: userResult.rows[0].email,
-                role: userResult.rows[0].role,
-                organizationId,
-            },
+            user: registeredUser,
         });
     }
     catch (error) {
@@ -133,7 +145,9 @@ authRouter.post("/register", registerRateLimit, async (request, response) => {
     }
 });
 authRouter.post("/login", loginRateLimit, async (request, response) => {
-    const input = loginSchema.parse(request.body);
+    const input = parseOrRespond(loginSchema, request.body, response);
+    if (!input)
+        return;
     const result = await pool.query(`
       SELECT
         id,
@@ -169,21 +183,16 @@ authRouter.post("/login", loginRateLimit, async (request, response) => {
         eventKey: "login_success",
         context: { email: user.email },
     });
+    const authenticatedUser = serializeAuthUser(user);
     const token = signToken({
         sub: user.id,
         organizationId: user.organizationId,
-        role: user.role,
+        role: authenticatedUser.role,
         email: user.email,
     });
     return response.json({
         token,
-        user: {
-            id: user.id,
-            organizationId: user.organizationId,
-            email: user.email,
-            role: user.role,
-            fullName: user.fullName,
-        },
+        user: authenticatedUser,
     });
 });
 authRouter.get("/me", requireAuth, async (request, response) => {
@@ -206,10 +215,12 @@ authRouter.get("/me", requireAuth, async (request, response) => {
       INNER JOIN organizations o ON o.id = u.organization_id
       WHERE u.id = $1
     `, [request.user.id]);
-    return response.json(result.rows[0]);
+    return response.json(serializeAuthUser(result.rows[0]));
 });
 authRouter.put("/onboarding", requireAuth, async (request, response) => {
-    const input = onboardingSchema.parse(request.body);
+    const input = parseOrRespond(onboardingSchema, request.body, response);
+    if (!input)
+        return;
     const current = await pool.query(`
       SELECT onboarding_steps AS "onboardingSteps"
       FROM users

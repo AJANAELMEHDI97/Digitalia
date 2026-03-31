@@ -2,6 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { pool } from "../db/pool.js";
 import { logEvent } from "../lib/logs.js";
+import { parseOrRespond } from "../lib/validation.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 const ruleSchema = z.object({
     name: z.string().min(3),
@@ -30,7 +31,9 @@ rulesRouter.get("/", async (request, response) => {
     return response.json(result.rows);
 });
 rulesRouter.post("/", requireRole(["admin"]), async (request, response) => {
-    const input = ruleSchema.parse(request.body);
+    const input = parseOrRespond(ruleSchema, request.body, response);
+    if (!input)
+        return;
     const result = await pool.query(`
         INSERT INTO global_rules (
           organization_id,

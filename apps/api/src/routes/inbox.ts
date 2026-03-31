@@ -2,6 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { pool } from "../db/pool.js";
 import { logEvent } from "../lib/logs.js";
+import { parseOrRespond } from "../lib/validation.js";
 import { requireAuth } from "../middleware/auth.js";
 const replySchema = z.object({
     content: z.string().min(2),
@@ -47,7 +48,9 @@ inboxRouter.get("/", async (request, response) => {
     });
 });
 inboxRouter.post("/:conversationId/reply", async (request, response) => {
-    const input = replySchema.parse(request.body);
+    const input = parseOrRespond(replySchema, request.body, response);
+    if (!input)
+        return;
     await pool.query(`
       INSERT INTO messages (conversation_id, sender_type, content)
       VALUES ($1, 'internal', $2)
@@ -69,7 +72,9 @@ inboxRouter.post("/:conversationId/reply", async (request, response) => {
     return response.status(201).json({ success: true });
 });
 inboxRouter.put("/:conversationId/assign", async (request, response) => {
-    const input = assignSchema.parse(request.body);
+    const input = parseOrRespond(assignSchema, request.body, response);
+    if (!input)
+        return;
     await pool.query(`
       UPDATE conversations
       SET assigned_user_id = $2,

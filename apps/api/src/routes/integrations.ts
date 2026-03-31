@@ -1,15 +1,19 @@
-import { Router } from "express";
+import { Router, type RequestHandler } from "express";
 import { z } from "zod";
 import { env } from "../config/env.js";
 import { pool } from "../db/pool.js";
 import { logEvent } from "../lib/logs.js";
 import { buildProviderAuthorizationUrl, createSocialState, decryptSensitiveValue, encryptSensitiveValue, exchangeCodeForConnections, getProviderCatalog, refreshConnectionIfNeeded, socialProviders, syncProviderConnection, verifySocialState, } from "../lib/social.js";
+import { parseOrRespond } from "../lib/validation.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 const integrationSchema = z.object({
     status: z.enum(["connected", "draft", "attention", "disconnected"]),
     syncFrequency: z.string().min(2),
 });
 const providerSchema = z.enum(["linkedin", "facebook", "instagram", "youtube"]);
+const asyncHandler = (handler: RequestHandler): RequestHandler => (request, response, next) => {
+    Promise.resolve(handler(request, response, next)).catch(next);
+};
 const getIntegrationProvider = (integration) => {
     const provider = typeof integration.details.provider === "string"
         ? integration.details.provider
@@ -20,7 +24,8 @@ const getIntegrationProvider = (integration) => {
         : null;
 };
 const getFrontendIntegrationUrl = (query: Record<string, string>) => {
-    const url = new URL("/app/integrations", env.FRONTEND_URL);
+    const url = new URL("/settings", env.FRONTEND_URL);
+    url.searchParams.set("tab", "connections");
     Object.entries(query).forEach(([key, value]) => {
         url.searchParams.set(key, value);
     });
@@ -44,7 +49,8 @@ const loadStoredConnections = async (organizationId) => {
         scopes,
         metadata,
         status,
-        last_sync_at AS "lastSyncAt"
+        last_sync_at AS "lastSyncAt",
+        created_at AS "createdAt"
       FROM social_connections
       WHERE organization_id = $1
       ORDER BY provider ASC, account_name ASC
@@ -66,6 +72,7 @@ const loadStoredConnections = async (organizationId) => {
         metadata: row.metadata,
         status: row.status,
         lastSyncAt: row.lastSyncAt,
+        createdAt: row.createdAt,
     }));
 };
 const toPublicConnection = (connection) => ({
@@ -82,6 +89,7 @@ const toPublicConnection = (connection) => ({
     status: connection.status,
     tokenExpiresAt: connection.tokenExpiresAt,
     lastSyncAt: connection.lastSyncAt,
+    createdAt: connection.createdAt,
 });
 const updateIntegrationStatusForProvider = async (organizationId, provider) => {
     const result = await pool.query(`
@@ -180,8 +188,10 @@ const upsertConnection = async ({ organizationId, integrationId, createdBy, conn
     ]);
 };
 export const integrationsRouter = Router();
-integrationsRouter.get("/oauth/:provider/callback", async (request, response) => {
-    const provider = providerSchema.parse(request.params.provider);
+integrationsRouter.get("/oauth/:provider/callback", asyncHandler(async (request, response) => {
+    const provider = parseOrRespond(providerSchema, request.params.provider, response);
+    if (!provider)
+        return;
     const stateToken = request.query.state?.toString();
     const code = request.query.code?.toString();
     const remoteError = request.query.error?.toString();
@@ -255,9 +265,9 @@ integrationsRouter.get("/oauth/:provider/callback", async (request, response) =>
                 : "Connexion OAuth impossible.",
         }));
     }
-});
+}));
 integrationsRouter.use(requireAuth);
-integrationsRouter.get("/", async (request, response) => {
+integrationsRouter.get("/", asyncHandler(async (request, response) => {
     const [integrationsResult, storedConnections] = await Promise.all([
         pool.query(`
         SELECT
@@ -299,21 +309,32 @@ integrationsRouter.get("/", async (request, response) => {
             connections: groupedConnections[provider] ?? [],
         };
     }));
-});
-integrationsRouter.get("/social/connections", async (request, response) => {
+}));
+integrationsRouter.get("/social/connections", asyncHandler(async (request, response) => {
     const connections = await loadStoredConnections(request.user.organizationId);
     return response.json(connections.map(toPublicConnection));
-});
-integrationsRouter.post("/social/:provider/connect-url", requireRole(["admin"]), async (request, response) => {
-    const provider = providerSchema.parse(request.params.provider);
+}));
+integrationsRouter.post("/social/:provider/connect-url", requireRole(["admin"]), asyncHandler(async (request, response) => {
+    const provider = parseOrRespond(providerSchema, request.params.provider, response);
+    if (!provider)
+        return;
+    const catalog = getProviderCatalog().find((item) => item.provider === provider);
+    if (!catalog) {
+        return response.status(404).json({ message: "Provider social introuvable." });
+    }
+    if (!catalog.configured) {
+        return response.status(400).json({
+            message: `${catalog.name} n'est pas configure. Variables manquantes: ${catalog.missingEnv.join(", ")}.`,
+        });
+    }
     const authUrl = buildProviderAuthorizationUrl(provider, createSocialState({
         userId: request.user.id,
         organizationId: request.user.organizationId,
         provider,
     }));
     return response.json({ provider, authUrl });
-});
-integrationsRouter.post("/social/connections/:id/sync", requireRole(["admin"]), async (request, response) => {
+}));
+integrationsRouter.post("/social/connections/:id/sync", requireRole(["admin"]), asyncHandler(async (request, response) => {
     const connections = await loadStoredConnections(request.user.organizationId);
     const connection = connections.find((item) => item.id === request.params.id);
     if (!connection) {
@@ -369,8 +390,8 @@ integrationsRouter.post("/social/connections/:id/sync", requireRole(["admin"]), 
             lastSyncAt: new Date().toISOString(),
         }),
     });
-});
-integrationsRouter.delete("/social/connections/:id", requireRole(["admin"]), async (request, response) => {
+}));
+integrationsRouter.delete("/social/connections/:id", requireRole(["admin"]), asyncHandler(async (request, response) => {
     const result = await pool.query(`
         DELETE FROM social_connections
         WHERE id = $1 AND organization_id = $2
@@ -390,9 +411,11 @@ integrationsRouter.delete("/social/connections/:id", requireRole(["admin"]), asy
         },
     });
     return response.json({ success: true });
-});
-integrationsRouter.put("/:id", requireRole(["admin"]), async (request, response) => {
-    const input = integrationSchema.parse(request.body);
+}));
+integrationsRouter.put("/:id", requireRole(["admin"]), asyncHandler(async (request, response) => {
+    const input = parseOrRespond(integrationSchema, request.body, response);
+    if (!input)
+        return;
     const result = await pool.query(`
         UPDATE integrations
         SET status = $2,
@@ -421,8 +444,8 @@ integrationsRouter.put("/:id", requireRole(["admin"]), async (request, response)
         context: { integrationId: request.params.id, status: input.status },
     });
     return response.json(result.rows[0]);
-});
-integrationsRouter.post("/:id/sync", requireRole(["admin"]), async (request, response) => {
+}));
+integrationsRouter.post("/:id/sync", requireRole(["admin"]), asyncHandler(async (request, response) => {
     const integrationResult = await pool.query(`
         SELECT
           id,
@@ -530,4 +553,4 @@ integrationsRouter.post("/:id/sync", requireRole(["admin"]), async (request, res
         WHERE id = $1
       `, [request.params.id]);
     return response.json(refreshed.rows[0]);
-});
+}));

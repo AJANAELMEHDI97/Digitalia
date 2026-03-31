@@ -1,12 +1,12 @@
-# SocialPulse.pro
+# SocialPulse
 
-Reconstruction du projet SocialPulse avec front, back, PostgreSQL et Docker.
+Application SocialPulse avec frontend React/Vite, API Express, PostgreSQL et Docker.
 
 ## Stack
 
-- Frontend servi par Nginx sur `http://localhost:8080`
-- API Express sur `http://localhost:4000`
-- Base PostgreSQL `socialpulse`
+- Frontend via Nginx: `http://localhost:8080`
+- API Express: `http://localhost:4000`
+- PostgreSQL: base `socialpulse`
 
 ## Lancement
 
@@ -14,23 +14,20 @@ Reconstruction du projet SocialPulse avec front, back, PostgreSQL et Docker.
 docker compose up --build -d
 ```
 
-## Comptes de démo
+## Comptes de demo
 
-- `admin@socialpulse.local / demo1234`
-- `editor@socialpulse.local / demo1234`
-- `reader@socialpulse.local / demo1234`
+- `nassimelhattabi@gmail.com / Nassima123`
 
-## Variables utiles
+## Configuration
 
-Copie `.env.example` vers `.env` si tu veux repartir avec une configuration propre.
+Copie `.env.example` vers `.env` pour personnaliser la configuration.
 
-## Sauvegardes récupérées
+Variables importantes:
 
-- Schéma SQL restauré : `database/init.sql`
-- Sauvegarde complète : `database/backup.sql`
-- Artefacts récupérés : `recovery/`
+- `FRONTEND_URL` et `API_PUBLIC_URL` pour les callbacks OAuth
+- `LINKEDIN_CLIENT_ID` / `LINKEDIN_CLIENT_SECRET`
+- `META_CLIENT_ID` / `META_CLIENT_SECRET`
+- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`
+- `SOCIALPULSE_AI_API_KEY` / `SOCIALPULSE_AI_GATEWAY_URL` pour les fonctions IA Supabase du zip
 
-## Note de reconstruction
-
-Le backend a été reconstruit à partir des artefacts de build récupérés.
-Le frontend restauré correspond à la dernière version buildée sauvée dans Docker.
+Sans credentials OAuth, les integrations sociales restent visibles dans l'interface mais renvoient une erreur HTTP `400` claire au lieu de faire tomber l'API.

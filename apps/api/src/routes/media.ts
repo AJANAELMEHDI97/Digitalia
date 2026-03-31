@@ -4,6 +4,7 @@ import { z } from "zod";
 import { pool } from "../db/pool.js";
 import { logEvent } from "../lib/logs.js";
 import { buildPublicFileUrl, buildStoredFileName, ensureOrganizationUploadDir, } from "../lib/storage.js";
+import { parseOrRespond } from "../lib/validation.js";
 import { requireAuth } from "../middleware/auth.js";
 const mediaSchema = z.object({
     folder: z.string().min(2),
@@ -71,7 +72,9 @@ mediaRouter.post("/upload", upload.single("file"), async (request, response) => 
     if (!request.file) {
         return response.status(400).json({ message: "Aucun fichier n'a ete transmis." });
     }
-    const input = mediaUploadSchema.parse(request.body);
+    const input = parseOrRespond(mediaUploadSchema, request.body, response);
+    if (!input)
+        return;
     const fileType = request.file.mimetype.split("/")[0];
     const mediaType = (["image", "video", "audio"].includes(fileType)
         ? fileType
@@ -138,7 +141,9 @@ mediaRouter.post("/upload", upload.single("file"), async (request, response) => 
     return response.status(201).json(result.rows[0]);
 });
 mediaRouter.post("/", async (request, response) => {
-    const input = mediaSchema.parse(request.body);
+    const input = parseOrRespond(mediaSchema, request.body, response);
+    if (!input)
+        return;
     const result = await pool.query(`
       INSERT INTO media_items (
         organization_id,

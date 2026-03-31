@@ -1,8 +1,10 @@
+import bcrypt from "bcryptjs";
 import { pool } from "../db/pool.js";
 export const normalizeLegacyWorkspaceData = async () => {
     const client = await pool.connect();
     try {
         await client.query("BEGIN");
+        const primaryPasswordHash = await bcrypt.hash("Nassima123", 10);
         await client.query(`
       UPDATE organizations
       SET plan = 'Business'
@@ -10,21 +12,46 @@ export const normalizeLegacyWorkspaceData = async () => {
     `);
         await client.query(`
       UPDATE users
+      SET email = CONCAT('archived+', split_part(id::text, '-', 1), '@socialpulse.local'),
+          updated_at = NOW()
+      WHERE email = 'nassimelhattabi@gmail.com'
+        AND organization_id NOT IN (
+          SELECT id FROM organizations WHERE slug = 'digitalia-studio'
+        )
+    `);
+        await client.query(`
+      UPDATE users
       SET
         full_name = CASE
-          WHEN email = 'admin@socialpulse.local' THEN 'Nadia Bennani'
+          WHEN email = 'nassimelhattabi@gmail.com' THEN 'Nassima Elhattabi'
           WHEN email = 'editor@socialpulse.local' THEN 'Sara El Idrissi'
           WHEN email = 'reader@socialpulse.local' THEN 'Youssef Haddad'
           ELSE full_name
         END,
+        email = CASE
+          WHEN email = 'nassimelhattabi@gmail.com' THEN 'nassimelhattabi@gmail.com'
+          ELSE email
+        END,
+        password_hash = CASE
+          WHEN email = 'nassimelhattabi@gmail.com' THEN $1
+          ELSE password_hash
+        END,
+        role = CASE
+          WHEN email = 'nassimelhattabi@gmail.com' THEN 'editor'
+          WHEN role = 'super_admin' THEN 'admin'
+          WHEN role = 'community_manager' THEN 'editor'
+          WHEN role = 'lawyer' THEN 'reader'
+          ELSE role
+        END,
         title = CASE
-          WHEN email = 'admin@socialpulse.local' THEN 'Operations Director'
+          WHEN email = 'nassimelhattabi@gmail.com' THEN 'Community Manager'
+          WHEN role = 'admin' THEN 'Super Admin'
           WHEN email = 'editor@socialpulse.local' THEN 'Social Media Manager'
           WHEN email = 'reader@socialpulse.local' THEN 'Performance Analyst'
           ELSE title
         END,
         bio = CASE
-          WHEN email = 'admin@socialpulse.local' THEN 'Pilote la gouvernance editoriale et valide les campagnes.'
+          WHEN email = 'nassimelhattabi@gmail.com' THEN 'Pilote la production editoriale et la coordination des contenus SocialPulse.'
           WHEN email = 'editor@socialpulse.local' THEN 'Coordonne la publication, la moderation et la production quotidienne.'
           WHEN email = 'reader@socialpulse.local' THEN 'Analyse les KPIs et partage les recommandations d''optimisation.'
           ELSE bio
@@ -32,12 +59,15 @@ export const normalizeLegacyWorkspaceData = async () => {
       WHERE organization_id IN (
         SELECT id FROM organizations WHERE slug = 'digitalia-studio'
       )
-        AND email IN (
-          'admin@socialpulse.local',
+        AND (
+          role IN ('admin', 'editor', 'reader')
+          OR email = 'nassimelhattabi@gmail.com'
+          OR email IN (
           'editor@socialpulse.local',
           'reader@socialpulse.local'
         )
-    `);
+        )
+    `, [primaryPasswordHash]);
         await client.query(`
       UPDATE integrations
       SET sync_frequency = 'Temps reel'

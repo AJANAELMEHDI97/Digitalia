@@ -1,10 +1,12 @@
+import type { PlatformRole } from "../lib/roles.js";
+
 declare global {
   namespace Express {
     interface AuthenticatedUser {
       id: string;
       organizationId: string;
       email: string;
-      role: string;
+      role: PlatformRole;
       fullName?: string;
     }
 
