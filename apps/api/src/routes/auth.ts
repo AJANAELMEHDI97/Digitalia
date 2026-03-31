@@ -8,6 +8,7 @@ import { dbRoleFromPlatformRole, normalizePlatformRole } from "../lib/roles.js";
 import { parseOrRespond } from "../lib/validation.js";
 import { requireAuth } from "../middleware/auth.js";
 import { createRateLimit } from "../middleware/rateLimit.js";
+import { env } from "../config/env.js";
 const registerSchema = z.object({
     fullName: z.string().min(2),
     email: z.string().email(),
@@ -49,6 +50,12 @@ const registerRateLimit = createRateLimit({
     keyFn: getAuthKey,
 });
 authRouter.post("/register", registerRateLimit, async (request, response) => {
+    if (!env.ALLOW_PUBLIC_SIGNUP) {
+        return response
+            .status(403)
+            .json({ message: "L'inscription publique est desactivee." });
+    }
+
     const input = parseOrRespond(registerSchema, request.body, response);
     if (!input)
         return;
@@ -194,6 +201,10 @@ authRouter.post("/login", loginRateLimit, async (request, response) => {
         token,
         user: authenticatedUser,
     });
+});
+
+authRouter.get("/config", (_request, response) => {
+    return response.json({ allowPublicSignup: env.ALLOW_PUBLIC_SIGNUP });
 });
 authRouter.get("/me", requireAuth, async (request, response) => {
     const result = await pool.query(`
