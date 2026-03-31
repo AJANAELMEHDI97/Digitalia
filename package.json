@@ -1,0 +1,24 @@
+{
+  "name": "digitalia",
+  "version": "1.0.0",
+  "description": "Application SocialPulse avec frontend React/Vite, API Express, PostgreSQL et Docker.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AJANAELMEHDI97/Digitalia.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/AJANAELMEHDI97/Digitalia/issues"
+  },
+  "homepage": "https://github.com/AJANAELMEHDI97/Digitalia#readme"
+}

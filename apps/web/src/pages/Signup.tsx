@@ -12,6 +12,7 @@ export default function Signup() {
   const { user, loading, signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [allowSignup, setAllowSignup] = useState<boolean | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [fullName, setFullName] = useState("");
@@ -27,11 +28,42 @@ export default function Signup() {
     }
   }, [user, loading, navigate]);
 
+  useEffect(() => {
+    let mounted = true;
+    fetch('/api/auth/config')
+      .then((r) => r.json())
+      .then((data) => {
+        if (!mounted) return;
+        setAllowSignup(Boolean(data?.allowPublicSignup));
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setAllowSignup(true);
+      });
+    return () => { mounted = false; };
+  }, []);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
+    );
+  }
+
+  if (allowSignup === false) {
+    return (
+      <AuthLayout tagline="Inscription fermee">
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold tracking-tight text-primary">Inscription fermee</h1>
+            <p className="text-muted-foreground">Les comptes sont crees par l'administrateur. Contactez-nous pour une demo.</p>
+          </div>
+          <div>
+            <Link to="/demo" className="text-primary font-medium hover:underline">Demander une demo</Link>
+          </div>
+        </div>
+      </AuthLayout>
     );
   }
 
