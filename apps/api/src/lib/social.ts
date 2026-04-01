@@ -6,6 +6,7 @@ export const socialProviders = [
     "facebook",
     "instagram",
     "youtube",
+    "google",
 ];
 const providerDefinitions = {
     linkedin: {
@@ -56,6 +57,20 @@ const providerDefinitions = {
         ],
         capabilities: ["connect", "sync_channel", "upload_video"],
     },
+    google: {
+        provider: "google",
+        name: "Google / Gmail",
+        description: "Connexion Google officielle pour lire et envoyer des emails via Gmail depuis la boite de reception.",
+        scopes: [
+            "openid",
+            "email",
+            "profile",
+            "https://www.googleapis.com/auth/gmail.readonly",
+            "https://www.googleapis.com/auth/gmail.send",
+            "https://www.googleapis.com/auth/gmail.compose",
+        ],
+        capabilities: ["connect", "read_gmail", "send_gmail"],
+    },
 };
 const baseApiUrl = env.API_PUBLIC_URL.trim() || `http://localhost:${env.PORT.toString()}`;
 const providerRedirectUris = {
@@ -69,6 +84,8 @@ const providerRedirectUris = {
         `${baseApiUrl}/integrations/oauth/instagram/callback`,
     youtube: env.GOOGLE_REDIRECT_URI.trim() ||
         `${baseApiUrl}/integrations/oauth/youtube/callback`,
+    // Allow overriding the Google/Gmail redirect URI from env for local setups
+    google: env.GOOGLE_REDIRECT_URI.trim() || `${baseApiUrl}/integrations/oauth/google/callback`,
 };
 const getProviderSecrets = (provider) => {
     if (provider === "linkedin") {
@@ -77,7 +94,7 @@ const getProviderSecrets = (provider) => {
             clientSecret: env.LINKEDIN_CLIENT_SECRET.trim(),
         };
     }
-    if (provider === "youtube") {
+    if (provider === "youtube" || provider === "google") {
         return {
             clientId: env.GOOGLE_CLIENT_ID.trim(),
             clientSecret: env.GOOGLE_CLIENT_SECRET.trim(),
@@ -94,14 +111,14 @@ export const getProviderCatalog = () => socialProviders.map((provider) => {
     if (!secrets.clientId) {
         missingEnv.push(provider === "linkedin"
             ? "LINKEDIN_CLIENT_ID"
-            : provider === "youtube"
+            : provider === "youtube" || provider === "google"
                 ? "GOOGLE_CLIENT_ID"
                 : "META_CLIENT_ID");
     }
     if (!secrets.clientSecret) {
         missingEnv.push(provider === "linkedin"
             ? "LINKEDIN_CLIENT_SECRET"
-            : provider === "youtube"
+            : provider === "youtube" || provider === "google"
                 ? "GOOGLE_CLIENT_SECRET"
                 : "META_CLIENT_SECRET");
     }
@@ -192,6 +209,17 @@ export const buildProviderAuthorizationUrl = (provider, state) => {
             access_type: "offline",
             prompt: "consent",
             include_granted_scopes: "true",
+            scope: catalog.scopes.join(" "),
+            state,
+        })}`;
+    }
+    if (provider === "google") {
+        return `https://accounts.google.com/o/oauth2/v2/auth?${toQueryString({
+            client_id: secrets.clientId,
+            redirect_uri: providerRedirectUris.google,
+            response_type: "code",
+            access_type: "offline",
+            prompt: "consent",
             scope: catalog.scopes.join(" "),
             state,
         })}`;
@@ -341,12 +369,49 @@ const exchangeGoogleCode = async (code) => {
         },
     }));
 };
+const exchangeGmailCode = async (code) => {
+    const token = await requestJson("https://oauth2.googleapis.com/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+            code,
+            client_id: env.GOOGLE_CLIENT_ID,
+            client_secret: env.GOOGLE_CLIENT_SECRET,
+            redirect_uri: providerRedirectUris.google,
+            grant_type: "authorization_code",
+        }),
+    }, "Connexion Google / Gmail impossible");
+    const userinfo = await requestJson("https://www.googleapis.com/oauth2/v3/userinfo", {
+        headers: { Authorization: `Bearer ${token.access_token}` },
+    }, "Lecture du profil Google impossible");
+    return [
+        {
+            provider: "google",
+            accountId: userinfo.sub,
+            accountName: userinfo.name || userinfo.email || "Compte Google",
+            accountHandle: userinfo.email,
+            accountType: "gmail",
+            avatarUrl: userinfo.picture ?? null,
+            accessToken: token.access_token,
+            refreshToken: token.refresh_token ?? null,
+            tokenExpiresAt: addSeconds(token.expires_in),
+            scopes: splitScopes(token.scope, providerDefinitions.google.scopes),
+            metadata: {
+                email: userinfo.email ?? null,
+                googleId: userinfo.sub,
+            },
+        },
+    ];
+};
 export const exchangeCodeForConnections = async (provider, code) => {
     if (provider === "linkedin") {
         return exchangeLinkedInCode(code);
     }
     if (provider === "youtube") {
         return exchangeGoogleCode(code);
+    }
+    if (provider === "google") {
+        return exchangeGmailCode(code);
     }
     return exchangeMetaCode(provider, code);
 };
@@ -379,7 +444,7 @@ const refreshGoogleToken = async (connection) => {
     };
 };
 export const refreshConnectionIfNeeded = async (connection) => {
-    if (connection.provider !== "youtube") {
+    if (connection.provider !== "youtube" && connection.provider !== "google") {
         return null;
     }
     return refreshGoogleToken(connection);
@@ -470,6 +535,32 @@ export const syncProviderConnection = async (connection) => {
                     ...connection.metadata,
                     instagramUserId: account.id,
                     instagramUsername: account.username ?? null,
+                },
+            },
+            refreshedCredentials,
+        };
+    }
+    if (connection.provider === "google") {
+        const userinfo = await requestJson("https://www.googleapis.com/oauth2/v3/userinfo", {
+            headers: { Authorization: `Bearer ${accessToken}` },
+        }, "Synchronisation Google impossible");
+        return {
+            discovery: {
+                provider: "google",
+                accountId: userinfo.sub ?? connection.accountId,
+                accountName: userinfo.name ?? connection.accountName,
+                accountHandle: userinfo.email ?? connection.accountHandle,
+                accountType: "gmail",
+                avatarUrl: userinfo.picture ?? connection.avatarUrl,
+                accessToken,
+                refreshToken: refreshedCredentials?.refreshToken ?? connection.refreshToken,
+                tokenExpiresAt: refreshedCredentials?.tokenExpiresAt ??
+                    (connection.tokenExpiresAt ? new Date(connection.tokenExpiresAt) : null),
+                scopes: connection.scopes,
+                metadata: {
+                    ...connection.metadata,
+                    email: userinfo.email ?? null,
+                    googleId: userinfo.sub ?? null,
                 },
             },
             refreshedCredentials,

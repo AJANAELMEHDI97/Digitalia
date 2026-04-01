@@ -2,6 +2,8 @@ import bcrypt from "bcryptjs";
 import { Router } from "express";
 import { z } from "zod";
 import { pool } from "../db/pool.js";
+import { env } from "../config/env.js";
+import { buildProviderAuthorizationUrl, createSocialState, verifySocialState, exchangeCodeForConnections } from "../lib/social.js";
 import { signToken } from "../lib/jwt.js";
 import { logEvent } from "../lib/logs.js";
 import { dbRoleFromPlatformRole, normalizePlatformRole } from "../lib/roles.js";
@@ -21,6 +23,11 @@ const loginSchema = z.object({
 const onboardingSchema = z.object({
     step: z.string().min(2),
 });
+
+// Simple in-memory phone code store for dev SMS sign-in (expires in 5 minutes)
+const phoneCodeStore: Map<string, { code: string; expiresAt: number }> = new Map();
+const PHONE_START_SCHEMA = z.object({ phone: z.string().min(6) });
+const PHONE_VERIFY_SCHEMA = z.object({ phone: z.string().min(6), code: z.string().min(4) });
 export const authRouter = Router();
 const serializeAuthUser = (user: Record<string, any>, overrides: Record<string, any> = {}) => {
     const safeOverrides = overrides;
@@ -240,4 +247,158 @@ authRouter.put("/onboarding", requireAuth, async (request, response) => {
         context: { step: input.step },
     });
     return response.json({ onboardingSteps: nextSteps });
+});
+
+// Phone sign-in (development friendly)
+authRouter.post("/phone/start", async (request, response) => {
+    const input = parseOrRespond(PHONE_START_SCHEMA, request.body, response);
+    if (!input)
+        return;
+    const phoneNormalized = input.phone.replace(/\s+/g, "");
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = Date.now() + 5 * 60 * 1000;
+    phoneCodeStore.set(phoneNormalized, { code, expiresAt });
+    await logEvent({ organizationId: null, actorUserId: null, eventKey: "phone_code_sent", context: { phone: phoneNormalized } });
+    // In dev, return the code in the response to make testing easy
+    const debug = (process.env.NODE_ENV ?? "").toLowerCase() !== "production";
+    return response.json({ success: true, debug: debug ? { code } : undefined });
+});
+
+authRouter.post("/phone/verify", async (request, response) => {
+    const input = parseOrRespond(PHONE_VERIFY_SCHEMA, request.body, response);
+    if (!input)
+        return;
+    const phoneNormalized = input.phone.replace(/\s+/g, "");
+    const entry = phoneCodeStore.get(phoneNormalized);
+    if (!entry || entry.code !== input.code || entry.expiresAt < Date.now()) {
+        return response.status(400).json({ message: "Code invalide ou expire." });
+    }
+    phoneCodeStore.delete(phoneNormalized);
+
+    // Find or create a user associated with this phone number (dev-friendly email alias)
+    const phoneEmail = `phone+${phoneNormalized}@local`;
+    let userResult = await pool.query(`SELECT id, organization_id AS "organizationId", email, role, full_name AS "fullName" FROM users WHERE LOWER(email) = $1 LIMIT 1`, [phoneEmail]);
+    let user = userResult.rows[0];
+    if (!user) {
+        const orgRes = await pool.query(`SELECT id FROM organizations ORDER BY id LIMIT 1`);
+        const organizationId = orgRes.rows[0]?.id ?? null;
+        const randomPassword = Math.random().toString(36).slice(2);
+        const passwordHash = await bcrypt.hash(randomPassword, 10);
+        const insert = await pool.query(`INSERT INTO users (organization_id, full_name, email, password_hash, role, onboarding_steps, theme, notification_preferences) VALUES ($1,$2,$3,$4,'reader','[]'::jsonb,'aurora','{}'::jsonb) RETURNING id, organization_id AS "organizationId", email, role, full_name AS "fullName"`, [organizationId, `Utilisateur ${phoneNormalized}`, phoneEmail, passwordHash]);
+        user = insert.rows[0];
+        try {
+            await pool.query(`INSERT INTO dashboard_preferences (user_id, layout) VALUES ($1, '{"hero":["performance","calendar"],"secondary":["approvals","notifications"]}'::jsonb)`, [user.id]);
+        }
+        catch (e) {
+            // ignore
+        }
+        await logEvent({ organizationId: user.organizationId, actorUserId: user.id, eventKey: "user_phone_created", context: { phone: phoneNormalized } });
+    }
+
+    const token = signToken({ sub: user.id, organizationId: user.organizationId, role: user.role, email: user.email });
+    return response.json({ token, user });
+});
+
+// Start Google OAuth login (redirects to Google)
+authRouter.get("/oauth/google", async (request, response) => {
+    // If Google redirected back with a code (callback), handle it here.
+    const code = request.query.code?.toString();
+    const stateToken = request.query.state?.toString();
+    const remoteError = request.query.error?.toString();
+
+    if (remoteError) {
+        const redirectTo = `${env.FRONTEND_URL.replace(/\/$/, "")}/login?error=${encodeURIComponent(remoteError)}`;
+        return response.redirect(redirectTo);
+    }
+
+    if (code && stateToken) {
+        try {
+            const verified = verifySocialState(stateToken) as Record<string, any>;
+            // Only accept login-purpose states here
+            if (verified.purpose !== "login") {
+                const redirectTo = `${env.FRONTEND_URL.replace(/\/$/, "")}/login?error=${encodeURIComponent("Etat OAuth invalide.")}`;
+                return response.redirect(redirectTo);
+            }
+
+            const connections = await exchangeCodeForConnections("google", code);
+            const connection = connections[0];
+            const email = connection?.metadata?.email ?? connection?.accountHandle;
+            if (!email) {
+                const redirectError = encodeURIComponent("Aucun email retrouve depuis le provider OAuth.");
+                return response.redirect(`${(verified.redirect as string) ?? env.FRONTEND_URL}/login?error=${redirectError}`);
+            }
+
+            // Find or create user
+            const userResult = await pool.query(
+                `SELECT id, organization_id AS "organizationId", email, role, full_name AS "fullName" FROM users WHERE LOWER(email) = $1 LIMIT 1`,
+                [email.toLowerCase()],
+            );
+
+            let user = userResult.rows[0];
+            if (!user) {
+                const orgRes = await pool.query(`SELECT id FROM organizations ORDER BY id LIMIT 1`);
+                const organizationId = orgRes.rows[0]?.id ?? null;
+                const displayName = connection?.accountName ?? email.split("@")[0];
+                const insert = await pool.query(
+                    `INSERT INTO users (organization_id, full_name, email, role, onboarding_steps, theme, notification_preferences) VALUES ($1,$2,$3,'reader','[]'::jsonb,'aurora','{}'::jsonb) RETURNING id, organization_id AS "organizationId", email, role, full_name AS "fullName"`,
+                    [organizationId, displayName, email.toLowerCase()],
+                );
+                user = insert.rows[0];
+                try {
+                    await pool.query(`INSERT INTO dashboard_preferences (user_id, layout) VALUES ($1, '{"hero":["performance","calendar"],"secondary":["approvals","notifications"]}'::jsonb)`, [user.id]);
+                }
+                catch (e) {
+                    // ignore preference failures
+                }
+                await logEvent({
+                    organizationId: user.organizationId,
+                    actorUserId: user.id,
+                    eventKey: "user_oauth_created",
+                    context: { provider: "google", email: user.email },
+                });
+            }
+
+            const token = signToken({
+                sub: user.id,
+                organizationId: user.organizationId,
+                role: user.role,
+                email: user.email,
+            });
+
+            const redirectTo = (verified.redirect as string) ?? env.FRONTEND_URL;
+            const encodedName = encodeURIComponent(user.fullName ?? "");
+            return response.redirect(`${redirectTo}/login?token=${encodeURIComponent(token)}&email=${encodeURIComponent(user.email)}&name=${encodedName}`);
+        }
+        catch (error) {
+            const message = error instanceof Error ? error.message : "Erreur OAuth Google";
+            const redirectTo = `${env.FRONTEND_URL.replace(/\/$/, "")}/login?error=${encodeURIComponent(message)}`;
+            return response.redirect(redirectTo);
+        }
+    }
+
+    // Otherwise start the OAuth flow
+    try {
+        const state = createSocialState({ purpose: "login", redirect: env.FRONTEND_URL });
+        const authUrl = buildProviderAuthorizationUrl("google", state);
+        return response.redirect(authUrl);
+    }
+    catch (error) {
+        const message = error instanceof Error ? error.message : "Impossible de demarrer OAuth Google.";
+        const redirectTo = `${env.FRONTEND_URL.replace(/\/$/, "")}/login?error=${encodeURIComponent(message)}`;
+        return response.redirect(redirectTo);
+    }
+});
+
+// Placeholder for Apple OAuth login - currently not implemented
+authRouter.get("/oauth/apple", async (_request, response) => {
+    const message = "Connexion Apple non implementee pour le moment.";
+    const redirectTo = `${env.FRONTEND_URL.replace(/\/$/, "")}/login?error=${encodeURIComponent(message)}`;
+    return response.redirect(redirectTo);
+});
+
+// Placeholder for phone-based sign-in (SMS) start
+authRouter.get("/oauth/phone", async (_request, response) => {
+    const message = "Connexion par telephone non implementee pour le moment.";
+    const redirectTo = `${env.FRONTEND_URL.replace(/\/$/, "")}/login?error=${encodeURIComponent(message)}`;
+    return response.redirect(redirectTo);
 });

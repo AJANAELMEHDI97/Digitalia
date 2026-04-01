@@ -29,6 +29,8 @@ import Admin from "./pages/Admin";
 import GoogleBusiness from "./pages/GoogleBusiness";
 import NotFound from "./pages/NotFound";
 import Demo from "./pages/Demo";
+import Onboarding from "./pages/Onboarding";
+import Inbox from "./pages/Inbox";
 
 // Pages CM dédiées
 import CMFirms from "./pages/cm/CMFirms";
@@ -103,6 +105,8 @@ const App = () => (
                   <Route path="/demo" element={<Demo />} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/onboarding" element={<Onboarding />} />
+                  <Route path="/inbox" element={<Inbox />} />
                   <Route path="/app/dashboard" element={<Navigate to="/dashboard" replace />} />
                   <Route path="/app/*" element={<Navigate to="/dashboard" replace />} />
                   <Route path="/dashboard" element={<DashboardRouter />} />

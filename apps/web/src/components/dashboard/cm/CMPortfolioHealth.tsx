@@ -47,7 +47,12 @@ export function CMPortfolioHealth({ firmStats }: CMPortfolioHealthProps) {
   return (
     <Card className="rounded-[32px] border border-[#e8ecf7] bg-white shadow-none">
       <CardHeader className="pb-3">
-        <CardTitle className="text-[18px] font-semibold text-[#23293d]">Sante portefeuille</CardTitle>
+        <div className="flex items-center justify-between gap-3">
+          <CardTitle className="text-[18px] font-semibold text-[#23293d]">Santé portefeuille</CardTitle>
+          <span className="rounded-full bg-[#f3f5fc] px-3 py-1 text-[13px] font-semibold text-[#697496]">
+            {total} cabinet{total !== 1 ? "s" : ""}
+          </span>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4 pt-0">
         <HealthBar
@@ -68,7 +73,7 @@ export function CMPortfolioHealth({ firmStats }: CMPortfolioHealthProps) {
         />
         <HealthBar
           icon={AlertTriangle}
-          label="A risque"
+          label="À risque"
           count={atRisk}
           total={total}
           barColor="bg-[#ff655c]"

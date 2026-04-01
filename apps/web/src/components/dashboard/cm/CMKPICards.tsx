@@ -99,16 +99,16 @@ function KPIItem({ icon: Icon, value, label, color, onClick, active }: KPIItemPr
       type="button"
       onClick={onClick}
       className={cn(
-        "flex h-[86px] w-full items-center gap-4 rounded-[22px] border border-[#e9ebf5] bg-white px-5 text-left shadow-[0_1px_0_rgba(220,224,238,0.45)] transition-all hover:-translate-y-0.5 hover:shadow-[0_12px_30px_rgba(113,123,165,0.08)]",
+        "flex h-[116px] w-full items-center gap-4 rounded-2xl border border-[#e9ebf5] bg-white px-6 text-left shadow-[0_10px_30px_rgba(113,123,165,0.04)] transition-transform hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(113,123,165,0.08)]",
         active && `border-transparent ring-2 ${styles.ring}`,
       )}
     >
-      <div className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl", styles.bg)}>
-        <Icon className={cn("h-5 w-5", styles.icon)} />
+      <div className={cn("flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl", styles.bg)}>
+        <Icon className={cn("h-6 w-6", styles.icon)} />
       </div>
       <div className="min-w-0">
-        <p className="text-[18px] font-bold leading-none text-[#1e2436]">{value}</p>
-        <p className="mt-1.5 text-[13px] text-[#9aa1b8]">{label}</p>
+        <p className="text-[22px] font-extrabold leading-none text-[#111827]">{value}</p>
+        <p className="mt-1.5 text-[13px] font-medium text-[#6e7aa8]">{label}</p>
       </div>
     </button>
   );

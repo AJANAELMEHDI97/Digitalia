@@ -73,7 +73,7 @@ export default function Signup() {
       title: "Compte cree",
       description: "Votre espace Digitalia est pret.",
     });
-    navigate("/dashboard");
+    navigate("/onboarding");
   };
 
   return (

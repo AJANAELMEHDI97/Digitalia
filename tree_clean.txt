@@ -1,0 +1,656 @@
+.
+├── README.md
+├── apps
+│   ├── api
+│   │   ├── Dockerfile
+│   │   ├── package-lock.json
+│   │   ├── package.json
+│   │   ├── src
+│   │   │   ├── config
+│   │   │   │   └── env.ts
+│   │   │   ├── db
+│   │   │   │   └── pool.ts
+│   │   │   ├── index.ts
+│   │   │   ├── lib
+│   │   │   │   ├── csv.ts
+│   │   │   │   ├── jwt.ts
+│   │   │   │   ├── logs.ts
+│   │   │   │   ├── normalize.ts
+│   │   │   │   ├── postWorkflow.ts
+│   │   │   │   ├── roles.ts
+│   │   │   │   ├── schema.ts
+│   │   │   │   ├── seed.ts
+│   │   │   │   ├── social.ts
+│   │   │   │   ├── storage.ts
+│   │   │   │   └── validation.ts
+│   │   │   ├── middleware
+│   │   │   │   ├── auth.ts
+│   │   │   │   └── rateLimit.ts
+│   │   │   ├── routes
+│   │   │   │   ├── adminLogs.ts
+│   │   │   │   ├── auth.ts
+│   │   │   │   ├── calendar.ts
+│   │   │   │   ├── dashboard.ts
+│   │   │   │   ├── exports.ts
+│   │   │   │   ├── inbox.ts
+│   │   │   │   ├── integrations.ts
+│   │   │   │   ├── media.ts
+│   │   │   │   ├── metrics.ts
+│   │   │   │   ├── notifications.ts
+│   │   │   │   ├── organization.ts
+│   │   │   │   ├── posts.ts
+│   │   │   │   ├── profile.ts
+│   │   │   │   ├── rules.ts
+│   │   │   │   └── trends.ts
+│   │   │   └── types
+│   │   │       └── express.d.ts
+│   │   └── tsconfig.json
+│   └── web
+│       ├── Dockerfile
+│       ├── README.md
+│       ├── components.json
+│       ├── eslint.config.js
+│       ├── index.html
+│       ├── nginx.conf
+│       ├── package-lock.json
+│       ├── package.json
+│       ├── postcss.config.js
+│       ├── public
+│       │   ├── favicon.ico
+│       │   ├── favicon.svg
+│       │   ├── placeholder.svg
+│       │   ├── robots.txt
+│       │   ├── socialpulse-og.svg
+│       │   └── socialpulse-pro-favicon.png
+│       ├── src
+│       │   ├── App.css
+│       │   ├── App.tsx
+│       │   ├── assets
+│       │   │   ├── landing
+│       │   │   │   ├── hero-lawyer-3d.png
+│       │   │   │   ├── lawyer-phone.png
+│       │   │   │   ├── portrait-laura.png
+│       │   │   │   ├── portrait-marc.png
+│       │   │   │   ├── portrait-sophie.png
+│       │   │   │   └── screens
+│       │   │   │       ├── communication.jpg
+│       │   │   │       ├── dashboard.jpg
+│       │   │   │       ├── social-media.jpg
+│       │   │   │       └── support.jpg
+│       │   │   ├── logo.png
+│       │   │   ├── logo.svg
+│       │   │   └── partners
+│       │   │       ├── cnb.jpg
+│       │   │       ├── cnil.jpg
+│       │   │       └── rin.jpg
+│       │   ├── components
+│       │   │   ├── NavLink.tsx
+│       │   │   ├── admin
+│       │   │   │   ├── AILawyerSearch.tsx
+│       │   │   │   ├── AdminDemoSeed.tsx
+│       │   │   │   ├── AdminFirmDetailSheet.tsx
+│       │   │   │   ├── LawyerScraping.tsx
+│       │   │   │   ├── LawyersList.tsx
+│       │   │   │   ├── RoleSwitcher.tsx
+│       │   │   │   ├── RoleSwitcherRef.tsx
+│       │   │   │   ├── ScrapingProgressTracker.tsx
+│       │   │   │   ├── UserManagement.tsx
+│       │   │   │   ├── business
+│       │   │   │   │   └── BusinessKPICard.tsx
+│       │   │   │   ├── coordination
+│       │   │   │   │   ├── ContextMessageButton.tsx
+│       │   │   │   │   ├── ConversationActions.tsx
+│       │   │   │   │   ├── ConversationThread.tsx
+│       │   │   │   │   ├── CoordinationFilters.tsx
+│       │   │   │   │   ├── CoordinationKPIBar.tsx
+│       │   │   │   │   ├── CoordinationStatsTab.tsx
+│       │   │   │   │   ├── FloatingCoordinationWidget.tsx
+│       │   │   │   │   ├── NewDiscussionForm.tsx
+│       │   │   │   │   ├── TeamMemberList.tsx
+│       │   │   │   │   └── TeamWorkloadTab.tsx
+│       │   │   │   ├── firms
+│       │   │   │   │   ├── FirmsActionItems.tsx
+│       │   │   │   │   ├── FirmsPriorityBlock.tsx
+│       │   │   │   │   ├── FirmsSmartAlerts.tsx
+│       │   │   │   │   ├── FirmsSummaryCards.tsx
+│       │   │   │   │   └── types.ts
+│       │   │   │   └── shared
+│       │   │   │       └── AdminUI.tsx
+│       │   │   ├── auth
+│       │   │   │   └── PhoneSignIn.tsx
+│       │   │   ├── blog
+│       │   │   │   ├── AIArticleAssistant.tsx
+│       │   │   │   ├── BlogArticleCard.tsx
+│       │   │   │   ├── BlogArticleDialog.tsx
+│       │   │   │   ├── BlogArticlePreview.tsx
+│       │   │   │   └── BlogEmptyState.tsx
+│       │   │   ├── calendar
+│       │   │   │   ├── CalendarFilters.tsx
+│       │   │   │   ├── CalendarGrid.tsx
+│       │   │   │   ├── EditorialGapsAlerts.tsx
+│       │   │   │   ├── EditorialOpportunitiesPanel.tsx
+│       │   │   │   ├── EditorialPipelineView.tsx
+│       │   │   │   ├── EditorialWorkloadBar.tsx
+│       │   │   │   ├── EnhancedCalendarGrid.tsx
+│       │   │   │   ├── ImageUpload.tsx
+│       │   │   │   ├── JudicialEventDetailPanel.tsx
+│       │   │   │   ├── KeyDateDetailPanel.tsx
+│       │   │   │   ├── PublicationDetailPanel.tsx
+│       │   │   │   ├── PublicationDialog.tsx
+│       │   │   │   ├── ScheduledPublicationsCarousel.tsx
+│       │   │   │   ├── StrategicCalendarFilters.tsx
+│       │   │   │   ├── StrategicCalendarGrid.tsx
+│       │   │   │   └── StrategicCalendarLegend.tsx
+│       │   │   ├── cm
+│       │   │   │   ├── CMDemoSeed.tsx
+│       │   │   │   └── CMFirmInfoDrawer.tsx
+│       │   │   ├── dashboard
+│       │   │   │   ├── ActivityChart.tsx
+│       │   │   │   ├── AdminDashboard.tsx
+│       │   │   │   ├── BlogBlock.tsx
+│       │   │   │   ├── CMBlock.tsx
+│       │   │   │   ├── CalendarBlock.tsx
+│       │   │   │   ├── CoverageWidget.tsx
+│       │   │   │   ├── DashboardFilters.tsx
+│       │   │   │   ├── DashboardStatCard.tsx
+│       │   │   │   ├── EngagementRotatingCard.tsx
+│       │   │   │   ├── EngagementsChart.tsx
+│       │   │   │   ├── LawyerDashboard.tsx
+│       │   │   │   ├── MetricsBlock.tsx
+│       │   │   │   ├── PerformanceChart.tsx
+│       │   │   │   ├── PlatformDistributionChart.tsx
+│       │   │   │   ├── PublicationsListCard.tsx
+│       │   │   │   ├── SubscribersDonut.tsx
+│       │   │   │   ├── TopTopicsCard.tsx
+│       │   │   │   ├── TrendsBlock.tsx
+│       │   │   │   ├── ValidationBlock.tsx
+│       │   │   │   ├── ValidationWidget.tsx
+│       │   │   │   ├── WeeklyGoalChart.tsx
+│       │   │   │   ├── WidgetGrid.tsx
+│       │   │   │   ├── WidgetWrapper.tsx
+│       │   │   │   ├── admin
+│       │   │   │   │   ├── AdminAccessSummary.tsx
+│       │   │   │   │   ├── AdminActivityLog.tsx
+│       │   │   │   │   ├── AdminActivityTimeline.tsx
+│       │   │   │   │   ├── AdminAlertsCard.tsx
+│       │   │   │   │   ├── AdminAlertsFeed.tsx
+│       │   │   │   │   ├── AdminAppointmentsBlock.tsx
+│       │   │   │   │   ├── AdminCMStatusBlock.tsx
+│       │   │   │   │   ├── AdminCockpitBlock.tsx
+│       │   │   │   │   ├── AdminHeroBanner.tsx
+│       │   │   │   │   ├── AdminQuickActions.tsx
+│       │   │   │   │   ├── AdminSmartAlerts.tsx
+│       │   │   │   │   ├── AdminSupervisionBanner.tsx
+│       │   │   │   │   ├── AdminValidationOverview.tsx
+│       │   │   │   │   ├── AlertsStrip.tsx
+│       │   │   │   │   ├── BusinessBlock.tsx
+│       │   │   │   │   ├── ExecutiveSummary.tsx
+│       │   │   │   │   ├── MRREvolutionChart.tsx
+│       │   │   │   │   ├── OperationalActivityChart.tsx
+│       │   │   │   │   ├── OperationalBlock.tsx
+│       │   │   │   │   ├── PipelineConversionChart.tsx
+│       │   │   │   │   ├── RiskAlertsList.tsx
+│       │   │   │   │   └── StrategicBar.tsx
+│       │   │   │   ├── cm
+│       │   │   │   │   ├── CMCriticalAlerts.tsx
+│       │   │   │   │   ├── CMCriticalAlertsMonitor.tsx
+│       │   │   │   │   ├── CMEditorialAlerts.tsx
+│       │   │   │   │   ├── CMFirmCard.tsx
+│       │   │   │   │   ├── CMFirmsList.tsx
+│       │   │   │   │   ├── CMKPICards.tsx
+│       │   │   │   │   ├── CMPerformanceBlock.tsx
+│       │   │   │   │   ├── CMPortfolioHealth.tsx
+│       │   │   │   │   ├── CMProductionChart.tsx
+│       │   │   │   │   ├── CMQuickActions.tsx
+│       │   │   │   │   ├── CMStatsRow.tsx
+│       │   │   │   │   └── CMUpcomingAppointments.tsx
+│       │   │   │   ├── index.ts
+│       │   │   │   ├── lawyer
+│       │   │   │   │   ├── LawyerAlertsCard.tsx
+│       │   │   │   │   ├── LawyerBlogCard.tsx
+│       │   │   │   │   ├── LawyerCalendarCard.tsx
+│       │   │   │   │   ├── LawyerDashboardHeader.tsx
+│       │   │   │   │   ├── LawyerDashboardHeaderRef.tsx
+│       │   │   │   │   ├── LawyerDigitalScoreCard.tsx
+│       │   │   │   │   ├── LawyerDigitalScoreCardRef.tsx
+│       │   │   │   │   ├── LawyerEmailingCard.tsx
+│       │   │   │   │   ├── LawyerEngagementCard.tsx
+│       │   │   │   │   ├── LawyerGoogleBusinessCard.tsx
+│       │   │   │   │   ├── LawyerJudicialEventsCard.tsx
+│       │   │   │   │   ├── LawyerOpportunitiesCard.tsx
+│       │   │   │   │   ├── LawyerPerformanceCard.tsx
+│       │   │   │   │   ├── LawyerPerformanceCardRef.tsx
+│       │   │   │   │   ├── LawyerQuickStatsCard.tsx
+│       │   │   │   │   ├── LawyerQuickStatsCardRef.tsx
+│       │   │   │   │   ├── LawyerSettingsCard.tsx
+│       │   │   │   │   ├── LawyerSupportCard.tsx
+│       │   │   │   │   ├── LawyerTrendsOpportunitiesCard.tsx
+│       │   │   │   │   ├── LawyerValidationBlock.tsx
+│       │   │   │   │   ├── LawyerValidationBlockRef.tsx
+│       │   │   │   │   ├── LawyerVisibilityCard.tsx
+│       │   │   │   │   └── index.ts
+│       │   │   │   ├── lazy
+│       │   │   │   │   └── LazyDashboardComponents.tsx
+│       │   │   │   └── widgets
+│       │   │   │       └── index.ts
+│       │   │   ├── duplication
+│       │   │   │   └── DuplicateButton.tsx
+│       │   │   ├── editor
+│       │   │   │   ├── AIImageGenerator.tsx
+│       │   │   │   ├── AIPostAssistant.tsx
+│       │   │   │   ├── RichTextEditor.tsx
+│       │   │   │   └── URLContentGenerator.tsx
+│       │   │   ├── editorial
+│       │   │   │   ├── CampaignConfigStep.tsx
+│       │   │   │   ├── CampaignConfirmStep.tsx
+│       │   │   │   ├── CampaignDialog.tsx
+│       │   │   │   ├── CampaignFirmPicker.tsx
+│       │   │   │   ├── CampaignPreviewStep.tsx
+│       │   │   │   ├── EditorialTips.tsx
+│       │   │   │   ├── PostExpandedPreview.tsx
+│       │   │   │   └── PostVisualTemplate.tsx
+│       │   │   ├── emailing
+│       │   │   │   ├── ArticlePickerDialog.tsx
+│       │   │   │   ├── CampaignRecipientsTable.tsx
+│       │   │   │   ├── CampaignStatsDialog.tsx
+│       │   │   │   ├── CampaignStatsOverview.tsx
+│       │   │   │   ├── CampaignsTab.tsx
+│       │   │   │   ├── ContactImportDialog.tsx
+│       │   │   │   ├── ContactListsTab.tsx
+│       │   │   │   ├── EmailTemplatesTab.tsx
+│       │   │   │   ├── SystemTemplates.tsx
+│       │   │   │   └── TemplateEditor.tsx
+│       │   │   ├── google-business
+│       │   │   │   ├── GoogleConnectionCard.tsx
+│       │   │   │   ├── GoogleInsightsCharts.tsx
+│       │   │   │   ├── GooglePostEditor.tsx
+│       │   │   │   ├── GooglePostsList.tsx
+│       │   │   │   ├── GoogleReviewsList.tsx
+│       │   │   │   ├── GoogleReviewsStats.tsx
+│       │   │   │   └── NegativeReviewsAlert.tsx
+│       │   │   ├── landing
+│       │   │   │   ├── AnimatedCounter.tsx
+│       │   │   │   ├── DeviceFrame.tsx
+│       │   │   │   ├── FeatureShowcase.tsx
+│       │   │   │   ├── HeroIllustration.tsx
+│       │   │   │   ├── HeroIllustration3D.tsx
+│       │   │   │   ├── HeroScreensSlider.tsx
+│       │   │   │   ├── Illustration3D.tsx
+│       │   │   │   └── TestimonialCard.tsx
+│       │   │   ├── layout
+│       │   │   │   ├── AdminSidebar.tsx
+│       │   │   │   ├── AppHeader.tsx
+│       │   │   │   ├── AppLayout.tsx
+│       │   │   │   ├── AppSidebar.tsx
+│       │   │   │   ├── AuthLayout.tsx
+│       │   │   │   ├── CMSidebar.tsx
+│       │   │   │   ├── FirmSelector.tsx
+│       │   │   │   ├── LatePublicationsBadge.tsx
+│       │   │   │   └── SimulationBanner.tsx
+│       │   │   ├── media
+│       │   │   │   ├── AIMediaGenerator.tsx
+│       │   │   │   ├── MediaCard.tsx
+│       │   │   │   ├── MediaDetailSheet.tsx
+│       │   │   │   └── MediaFilters.tsx
+│       │   │   ├── metrics
+│       │   │   │   ├── AIMetricsInterpretation.tsx
+│       │   │   │   ├── AudienceCharts.tsx
+│       │   │   │   ├── ClickRateChart.tsx
+│       │   │   │   ├── EngagementAreaChart.tsx
+│       │   │   │   ├── GlobalStats.tsx
+│       │   │   │   ├── MetricsCard.tsx
+│       │   │   │   ├── MetricsDetailView.tsx
+│       │   │   │   ├── MetricsFilters.tsx
+│       │   │   │   ├── MetricsGrid.tsx
+│       │   │   │   ├── MetricsPublicationCard.tsx
+│       │   │   │   ├── MetricsPublicationList.tsx
+│       │   │   │   ├── PerformanceBadge.tsx
+│       │   │   │   ├── PerformanceReading.tsx
+│       │   │   │   ├── PlatformStatsTable.tsx
+│       │   │   │   ├── PublicationMetricsCard.tsx
+│       │   │   │   ├── ReachDonutChart.tsx
+│       │   │   │   └── ViewMetricsButton.tsx
+│       │   │   ├── onboarding
+│       │   │   │   ├── ValidationBanner.tsx
+│       │   │   │   └── WelcomeModal.tsx
+│       │   │   ├── preview
+│       │   │   │   └── SocialPreview.tsx
+│       │   │   ├── routing
+│       │   │   │   └── DashboardRouter.tsx
+│       │   │   ├── settings
+│       │   │   │   ├── SocialConnectionCard.tsx
+│       │   │   │   ├── SocialConnectionsPreviewTab.tsx
+│       │   │   │   ├── SocialConnectionsTab.tsx
+│       │   │   │   └── SocialPlatformPreviewCard.tsx
+│       │   │   ├── support
+│       │   │   │   ├── AIAssistant.tsx
+│       │   │   │   ├── AIAssistantPopover.tsx
+│       │   │   │   ├── AppointmentBooking.tsx
+│       │   │   │   ├── CMAppointments.tsx
+│       │   │   │   ├── CMMessaging.tsx
+│       │   │   │   ├── CMStats.tsx
+│       │   │   │   ├── FAQSection.tsx
+│       │   │   │   ├── FloatingAIButton.tsx
+│       │   │   │   └── SupportHub.tsx
+│       │   │   ├── trends
+│       │   │   │   ├── TrendCard.tsx
+│       │   │   │   ├── TrendDetailSheet.tsx
+│       │   │   │   ├── TrendFilters.tsx
+│       │   │   │   ├── TrendMap.tsx
+│       │   │   │   ├── TrendOverview.tsx
+│       │   │   │   └── TrendStats.tsx
+│       │   │   ├── ui
+│       │   │   │   ├── accordion.tsx
+│       │   │   │   ├── alert-dialog.tsx
+│       │   │   │   ├── alert.tsx
+│       │   │   │   ├── aspect-ratio.tsx
+│       │   │   │   ├── avatar.tsx
+│       │   │   │   ├── badge.tsx
+│       │   │   │   ├── breadcrumb.tsx
+│       │   │   │   ├── button.tsx
+│       │   │   │   ├── calendar.tsx
+│       │   │   │   ├── card.tsx
+│       │   │   │   ├── carousel.tsx
+│       │   │   │   ├── chart.tsx
+│       │   │   │   ├── checkbox.tsx
+│       │   │   │   ├── collapsible.tsx
+│       │   │   │   ├── command.tsx
+│       │   │   │   ├── context-menu.tsx
+│       │   │   │   ├── dialog.tsx
+│       │   │   │   ├── drawer.tsx
+│       │   │   │   ├── dropdown-menu.tsx
+│       │   │   │   ├── form.tsx
+│       │   │   │   ├── hover-card.tsx
+│       │   │   │   ├── input-otp.tsx
+│       │   │   │   ├── input.tsx
+│       │   │   │   ├── label.tsx
+│       │   │   │   ├── menubar.tsx
+│       │   │   │   ├── navigation-menu.tsx
+│       │   │   │   ├── pagination.tsx
+│       │   │   │   ├── platform-badge.tsx
+│       │   │   │   ├── popover.tsx
+│       │   │   │   ├── progress.tsx
+│       │   │   │   ├── radio-group.tsx
+│       │   │   │   ├── resizable.tsx
+│       │   │   │   ├── scroll-area.tsx
+│       │   │   │   ├── select.tsx
+│       │   │   │   ├── separator.tsx
+│       │   │   │   ├── sheet.tsx
+│       │   │   │   ├── sidebar.tsx
+│       │   │   │   ├── skeleton.tsx
+│       │   │   │   ├── slider.tsx
+│       │   │   │   ├── sonner.tsx
+│       │   │   │   ├── source-badge.tsx
+│       │   │   │   ├── switch.tsx
+│       │   │   │   ├── table.tsx
+│       │   │   │   ├── tabs.tsx
+│       │   │   │   ├── textarea.tsx
+│       │   │   │   ├── toast.tsx
+│       │   │   │   ├── toaster.tsx
+│       │   │   │   ├── toggle-group.tsx
+│       │   │   │   ├── toggle.tsx
+│       │   │   │   ├── tooltip.tsx
+│       │   │   │   └── use-toast.ts
+│       │   │   └── validation
+│       │   │       ├── AutoValidationAlerts.tsx
+│       │   │       ├── AutoValidationBanner.tsx
+│       │   │       ├── AutoValidationCountdown.tsx
+│       │   │       ├── LatePublicationAlerts.tsx
+│       │   │       ├── ModificationRequestDialog.tsx
+│       │   │       ├── ValidationAuditTrail.tsx
+│       │   │       ├── ValidationCard.tsx
+│       │   │       ├── ValidationCardEnhanced.tsx
+│       │   │       ├── ValidationFilters.tsx
+│       │   │       ├── ValidationSLASettings.tsx
+│       │   │       └── ValidationSLATimer.tsx
+│       │   ├── contexts
+│       │   │   ├── LawFirmContext.tsx
+│       │   │   └── RoleSimulationContext.tsx
+│       │   ├── data
+│       │   │   ├── mockCMValidation.ts
+│       │   │   ├── mockGeneratedPosts.ts
+│       │   │   ├── mockJudicialEvents.ts
+│       │   │   ├── mockKeyDates.ts
+│       │   │   ├── mockMedia.ts
+│       │   │   ├── mockMetrics.ts
+│       │   │   ├── mockSupport.ts
+│       │   │   └── mockTrends.ts
+│       │   ├── hooks
+│       │   │   ├── __tests__
+│       │   │   │   └── useAdminLogs.test.ts
+│       │   │   ├── admin
+│       │   │   │   ├── useAdminAccounts.tsx
+│       │   │   │   ├── useAdminAcquisition.tsx
+│       │   │   │   ├── useAdminBusiness.tsx
+│       │   │   │   ├── useAdminChurn.tsx
+│       │   │   │   ├── useAdminForecast.tsx
+│       │   │   │   ├── useAdminKPISaaS.tsx
+│       │   │   │   ├── useAdminLeads.tsx
+│       │   │   │   ├── useAdminMRR.tsx
+│       │   │   │   └── useAdminOperations.tsx
+│       │   │   ├── use-mobile.tsx
+│       │   │   ├── use-toast.ts
+│       │   │   ├── useAdminCoordination.tsx
+│       │   │   ├── useAdminDashboard.tsx
+│       │   │   ├── useAdminFirms.tsx
+│       │   │   ├── useAdminLogs.ts
+│       │   │   ├── useAdminOperational.tsx
+│       │   │   ├── useAdminSmartAlerts.tsx
+│       │   │   ├── useAuth.tsx
+│       │   │   ├── useAutoValidation.tsx
+│       │   │   ├── useBlogArticles.tsx
+│       │   │   ├── useCMMessaging.tsx
+│       │   │   ├── useCMWorkspace.tsx
+│       │   │   ├── useComments.tsx
+│       │   │   ├── useDashboardLayout.tsx
+│       │   │   ├── useDeferredSeed.tsx
+│       │   │   ├── useEditorialCampaign.tsx
+│       │   │   ├── useEmailing.tsx
+│       │   │   ├── useFAQ.tsx
+│       │   │   ├── useGoogleBusiness.tsx
+│       │   │   ├── useInvoices.tsx
+│       │   │   ├── useJudicialEvents.tsx
+│       │   │   ├── useKeyDates.tsx
+│       │   │   ├── useLawFirm.tsx
+│       │   │   ├── useMetrics.tsx
+│       │   │   ├── useNotifications.tsx
+│       │   │   ├── useOnboarding.tsx
+│       │   │   ├── useProfile.tsx
+│       │   │   ├── usePublications.tsx
+│       │   │   ├── useReadOnlyMode.tsx
+│       │   │   ├── useSeedDemoContent.tsx
+│       │   │   ├── useSimpleAuth.tsx
+│       │   │   ├── useSimpleRole.tsx
+│       │   │   ├── useSocialConnections.tsx
+│       │   │   ├── useSupport.tsx
+│       │   │   ├── useTrends.tsx
+│       │   │   ├── useUserRole.tsx
+│       │   │   ├── useUserSession.tsx
+│       │   │   └── useValidationSLA.tsx
+│       │   ├── index.css
+│       │   ├── integrations
+│       │   │   └── supabase
+│       │   │       ├── client.ts
+│       │   │       └── types.ts
+│       │   ├── lib
+│       │   │   ├── api-client.ts
+│       │   │   ├── local-auth.ts
+│       │   │   └── utils.ts
+│       │   ├── main.tsx
+│       │   ├── pages
+│       │   │   ├── Admin.tsx
+│       │   │   ├── Assistant.tsx
+│       │   │   ├── Blog.tsx
+│       │   │   ├── CMDashboard.tsx
+│       │   │   ├── Calendar.tsx
+│       │   │   ├── Dashboard.tsx
+│       │   │   ├── Demo.tsx
+│       │   │   ├── Editor.tsx
+│       │   │   ├── Emailing.tsx
+│       │   │   ├── ForgotPassword.tsx
+│       │   │   ├── GoogleBusiness.tsx
+│       │   │   ├── Index.tsx
+│       │   │   ├── Login.tsx
+│       │   │   ├── Media.tsx
+│       │   │   ├── Metrics.tsx
+│       │   │   ├── NotFound.tsx
+│       │   │   ├── Pricing.tsx
+│       │   │   ├── Profile.tsx
+│       │   │   ├── ResetPassword.tsx
+│       │   │   ├── Settings.tsx
+│       │   │   ├── Signup.tsx
+│       │   │   ├── Trends.tsx
+│       │   │   ├── Validation.tsx
+│       │   │   ├── admin
+│       │   │   │   ├── AdminAccountsPage.tsx
+│       │   │   │   ├── AdminAcquisitionPage.tsx
+│       │   │   │   ├── AdminAuditPage.tsx
+│       │   │   │   ├── AdminBillingDelaysPage.tsx
+│       │   │   │   ├── AdminBillingHistoryPage.tsx
+│       │   │   │   ├── AdminBillingInvoicesPage.tsx
+│       │   │   │   ├── AdminBillingReceivedPage.tsx
+│       │   │   │   ├── AdminBusinessPage.tsx
+│       │   │   │   ├── AdminChannelsPage.tsx
+│       │   │   │   ├── AdminChurnPage.tsx
+│       │   │   │   ├── AdminComplianceDashboardPage.tsx
+│       │   │   │   ├── AdminCompliancePage.tsx
+│       │   │   │   ├── AdminConversionsPage.tsx
+│       │   │   │   ├── AdminCoordinationPage.tsx
+│       │   │   │   ├── AdminDeontologyPage.tsx
+│       │   │   │   ├── AdminFirmsPage.tsx
+│       │   │   │   ├── AdminForecastPage.tsx
+│       │   │   │   ├── AdminKPISaaSPage.tsx
+│       │   │   │   ├── AdminLeadsAttributionPage.tsx
+│       │   │   │   ├── AdminLeadsConversionRatePage.tsx
+│       │   │   │   ├── AdminLeadsDemosPage.tsx
+│       │   │   │   ├── AdminLeadsPipelinePage.tsx
+│       │   │   │   ├── AdminLeadsStatusPage.tsx
+│       │   │   │   ├── AdminMRRPage.tsx
+│       │   │   │   ├── AdminNotificationsPage.tsx
+│       │   │   │   ├── AdminOperationsPage.tsx
+│       │   │   │   ├── AdminOverduePage.tsx
+│       │   │   │   ├── AdminPacksPage.tsx
+│       │   │   │   ├── AdminPaymentsPage.tsx
+│       │   │   │   ├── AdminPlatformSettingsPage.tsx
+│       │   │   │   ├── AdminPublicationsPage.tsx
+│       │   │   │   ├── AdminRolesPage.tsx
+│       │   │   │   ├── AdminSettingsPage.tsx
+│       │   │   │   ├── AdminTeamAppointmentsPage.tsx
+│       │   │   │   ├── AdminTeamCMsPage.tsx
+│       │   │   │   ├── AdminTeamPerformancePage.tsx
+│       │   │   │   ├── AdminTeamSalesPage.tsx
+│       │   │   │   ├── AdminTeamStatusPage.tsx
+│       │   │   │   ├── AdminTicketsPage.tsx
+│       │   │   │   └── AdminUsersPage.tsx
+│       │   │   └── cm
+│       │   │       ├── CMContent.tsx
+│       │   │       ├── CMFirmSettings.tsx
+│       │   │       ├── CMFirms.tsx
+│       │   │       └── CMRequests.tsx
+│       │   ├── styles
+│       │   │   └── dashboard-animations.css
+│       │   ├── test
+│       │   │   ├── example.test.ts
+│       │   │   └── setup.ts
+│       │   ├── types
+│       │   │   └── trend.ts
+│       │   ├── utils
+│       │   │   ├── adminDemoSeed.ts
+│       │   │   ├── audioAlerts.ts
+│       │   │   ├── cmDemoSeed.ts
+│       │   │   └── metricsGenerator.ts
+│       │   └── vite-env.d.ts
+│       ├── supabase
+│       │   ├── config.toml
+│       │   ├── functions
+│       │   │   ├── auto-validate-publications
+│       │   │   │   └── index.ts
+│       │   │   ├── cm-ai-assistant
+│       │   │   │   └── index.ts
+│       │   │   ├── generate-editorial-plan
+│       │   │   │   └── index.ts
+│       │   │   ├── generate-firm-versions
+│       │   │   │   └── index.ts
+│       │   │   ├── generate-from-url
+│       │   │   │   └── index.ts
+│       │   │   ├── generate-image
+│       │   │   │   └── index.ts
+│       │   │   ├── generate-landing-assets
+│       │   │   │   └── index.ts
+│       │   │   ├── generate-post
+│       │   │   │   └── index.ts
+│       │   │   ├── generate-review-reply
+│       │   │   │   └── index.ts
+│       │   │   ├── google-business-api
+│       │   │   │   └── index.ts
+│       │   │   ├── interpret-metrics
+│       │   │   │   └── index.ts
+│       │   │   ├── publish-to-social
+│       │   │   │   └── index.ts
+│       │   │   ├── scrape-lawyers
+│       │   │   │   └── index.ts
+│       │   │   ├── search-lawyers
+│       │   │   │   └── index.ts
+│       │   │   ├── seed-admin-demo
+│       │   │   │   └── index.ts
+│       │   │   └── social-oauth
+│       │   │       └── index.ts
+│       │   └── migrations
+│       │       ├── 20260114100421_3658da94-79c5-405b-9f1b-5508af31826d.sql
+│       │       ├── 20260114132648_9919af7e-4eab-45ae-8f80-2a86fa2e997a.sql
+│       │       ├── 20260114133142_bf74072a-a1b4-4339-a0a0-d92ccf5ba9a5.sql
+│       │       ├── 20260114135234_affd7172-212b-4571-ac5c-88bebb5f1b8e.sql
+│       │       ├── 20260114135457_2c6f1d7e-fa23-45dc-9f13-df49506bcef5.sql
+│       │       ├── 20260114151227_d81ad294-414d-496c-b551-9df218a6012b.sql
+│       │       ├── 20260114152517_3da45d3e-88af-4f25-8cc6-2d16b1debb08.sql
+│       │       ├── 20260115160057_58c599e4-7847-4f8e-b0a6-88ff193f49cc.sql
+│       │       ├── 20260115205111_b6f22eb8-5b06-47e4-b1f4-5b553d6e2072.sql
+│       │       ├── 20260115210233_4afccdb5-1f80-4576-8790-f1f2129d16f5.sql
+│       │       ├── 20260115213730_0aff6a77-8fbc-406c-85bc-6637bec7b609.sql
+│       │       ├── 20260115214415_c996f707-0645-470b-b0d0-0327e724f767.sql
+│       │       ├── 20260116062752_862afada-e592-499b-b443-7a785cf73ac3.sql
+│       │       ├── 20260116174718_4fe87197-6dc8-45f6-b11e-b7ccaaec6b3b.sql
+│       │       ├── 20260116180732_d0b51b77-0c73-4dc5-8d32-850ab2850e19.sql
+│       │       ├── 20260116222814_a7092cde-1f50-41a7-9ec7-6ff8aa69b1fc.sql
+│       │       ├── 20260116222839_14bf1628-871e-46a9-b87f-c711b5f8e246.sql
+│       │       ├── 20260116224433_739a7d6b-812e-4d44-9bf9-52a906dde122.sql
+│       │       ├── 20260116230050_bbcbb174-02e3-419d-916d-268dbf760ffa.sql
+│       │       ├── 20260116230611_cbc78846-40ce-4e56-aaa1-b43ea09c7b6f.sql
+│       │       ├── 20260116231141_bfe47494-1853-4cf6-a9ff-5a0c625b68dd.sql
+│       │       ├── 20260116232134_cdbe964e-95e3-43ac-b0c9-988930da8d83.sql
+│       │       ├── 20260117184501_5183f961-249e-4d13-937c-37043596ecac.sql
+│       │       ├── 20260118224115_7c81b249-baf2-4570-adfd-e0cf685c5cd3.sql
+│       │       ├── 20260119094725_b93d3a89-e094-46d6-bc06-6aac84cd5f53.sql
+│       │       ├── 20260119191331_011d5354-7679-4e2b-ae15-edaf2d8761e2.sql
+│       │       ├── 20260119192801_af02a4aa-e8c6-4a0a-b71f-dcec1c325020.sql
+│       │       ├── 20260120070054_67f4d7e6-4f66-4479-baef-990d3d7ca5a1.sql
+│       │       ├── 20260120071442_4a4a3e4c-d1c1-423c-8df8-ff8237c61889.sql
+│       │       ├── 20260120114649_8682d499-9afc-4be7-ad15-c66fe0a7ee42.sql
+│       │       ├── 20260122161756_0481cdfc-7b0a-4195-a7c6-6f5bdbadf6fe.sql
+│       │       ├── 20260125134342_369769bd-85cf-4499-a6e3-7aad4646d345.sql
+│       │       ├── 20260125134942_58b58eeb-3e04-4789-8dae-2df9f60bb5b4.sql
+│       │       ├── 20260125215350_0ba51a46-deb6-4540-a498-628abeef4a51.sql
+│       │       ├── 20260128151000_843278e4-3b9d-4406-8848-0ff775b5e027.sql
+│       │       ├── 20260128180458_c169e9ce-0adb-4a9d-b2ad-06dcf5150007.sql
+│       │       ├── 20260128181710_af78d228-ab68-4a08-b965-ae8c1cb3e5f1.sql
+│       │       ├── 20260210212940_ef33a0ae-ce70-464e-bbca-1591308df0c9.sql
+│       │       ├── 20260301005939_b921ad13-cb82-4876-8ec5-4e3f0464d750.sql
+│       │       ├── 20260303012527_6c6f2694-846a-48ec-9daf-6e05da669f79.sql
+│       │       └── 20260305004956_b0b8470c-c334-4a43-a622-bde71dc92d9f.sql
+│       ├── tailwind.config.ts
+│       ├── tsconfig.app.json
+│       ├── tsconfig.json
+│       ├── tsconfig.node.json
+│       ├── vite.config.ts
+│       └── vitest.config.ts
+├── database
+│   └── init.sql
+├── docker-compose.yml
+├── docs
+│   ├── SOCIALPULSE_REFERENCE_SPEC.md
+│   └── tasks_and_prs.md
+├── scripts
+│   └── test_admin_logs.js
+└── tree_clean.txt
+
+87 directories, 567 files

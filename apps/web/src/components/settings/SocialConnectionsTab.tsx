@@ -17,6 +17,7 @@ const PLATFORMS_ORDER: SocialPlatformConnection[] = [
   "facebook",
   "instagram",
   "youtube",
+  "google",
 ];
 
 export function SocialConnectionsTab() {
@@ -101,7 +102,7 @@ export function SocialConnectionsTab() {
                 </span>
               </CardTitle>
               <CardDescription>
-                Raccordez LinkedIn, Facebook, Instagram et YouTube via les integrations OAuth du backend.
+                Raccordez LinkedIn, Facebook, Instagram, YouTube et Google / Gmail via OAuth.
               </CardDescription>
             </div>
           </div>

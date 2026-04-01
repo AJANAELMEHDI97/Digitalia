@@ -71,6 +71,27 @@ inboxRouter.post("/:conversationId/reply", async (request, response) => {
     });
     return response.status(201).json({ success: true });
 });
+const statusSchema = z.object({
+    status: z.enum(["open", "assigned", "closed"]),
+});
+inboxRouter.patch("/:conversationId/status", async (request, response) => {
+    const input = parseOrRespond(statusSchema, request.body, response);
+    if (!input)
+        return;
+    await pool.query(`
+      UPDATE conversations
+      SET status = $2,
+          updated_at = NOW()
+      WHERE id = $1 AND organization_id = $3
+    `, [request.params.conversationId, input.status, request.user.organizationId]);
+    await logEvent({
+        organizationId: request.user.organizationId,
+        actorUserId: request.user.id,
+        eventKey: "conversation_status_changed",
+        context: { conversationId: request.params.conversationId, status: input.status },
+    });
+    return response.json({ success: true });
+});
 inboxRouter.put("/:conversationId/assign", async (request, response) => {
     const input = parseOrRespond(assignSchema, request.body, response);
     if (!input)

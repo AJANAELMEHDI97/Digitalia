@@ -3,6 +3,7 @@ import { z } from "zod";
 import { env } from "../config/env.js";
 import { pool } from "../db/pool.js";
 import { logEvent } from "../lib/logs.js";
+import { signToken } from "../lib/jwt.js";
 import { buildProviderAuthorizationUrl, createSocialState, decryptSensitiveValue, encryptSensitiveValue, exchangeCodeForConnections, getProviderCatalog, refreshConnectionIfNeeded, socialProviders, syncProviderConnection, verifySocialState, } from "../lib/social.js";
 import { parseOrRespond } from "../lib/validation.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
@@ -10,7 +11,7 @@ const integrationSchema = z.object({
     status: z.enum(["connected", "draft", "attention", "disconnected"]),
     syncFrequency: z.string().min(2),
 });
-const providerSchema = z.enum(["linkedin", "facebook", "instagram", "youtube"]);
+const providerSchema = z.enum(["linkedin", "facebook", "instagram", "youtube", "google"]);
 const asyncHandler = (handler: RequestHandler): RequestHandler => (request, response, next) => {
     Promise.resolve(handler(request, response, next)).catch(next);
 };
@@ -210,14 +211,63 @@ integrationsRouter.get("/oauth/:provider/callback", asyncHandler(async (request,
         }));
     }
     try {
-        const verified = verifySocialState(stateToken) as {
-            provider: string;
-            organizationId: string;
-            userId: string;
-        };
-        if (verified.provider !== provider) {
+        const verified = verifySocialState(stateToken) as Record<string, any>;
+        if (verified.provider && verified.provider !== provider) {
             throw new Error("Le provider du callback ne correspond pas a l'etat OAuth.");
         }
+
+        // Special-case: login flow via OAuth state
+        if (verified.purpose === "login") {
+            const connections = await exchangeCodeForConnections(provider, code);
+            const connection = connections[0];
+            const email = connection?.metadata?.email ?? connection?.accountHandle;
+            if (!email) {
+                const redirectError = encodeURIComponent("Aucun email retrouve depuis le provider OAuth.");
+                return response.redirect(`${(verified.redirect as string) ?? env.FRONTEND_URL}/login?error=${redirectError}`);
+            }
+
+            // Find or create user
+            const userResult = await pool.query(
+                `SELECT id, organization_id AS "organizationId", email, role, full_name AS "fullName" FROM users WHERE LOWER(email) = $1 LIMIT 1`,
+                [email.toLowerCase()],
+            );
+
+            let user = userResult.rows[0];
+            if (!user) {
+                const orgRes = await pool.query(`SELECT id FROM organizations ORDER BY id LIMIT 1`);
+                const organizationId = orgRes.rows[0]?.id ?? null;
+                const displayName = connection?.accountName ?? email.split("@")[0];
+                const insert = await pool.query(
+                    `INSERT INTO users (organization_id, full_name, email, role, onboarding_steps, theme, notification_preferences) VALUES ($1,$2,$3,'reader','[]'::jsonb,'aurora','{}'::jsonb) RETURNING id, organization_id AS "organizationId", email, role, full_name AS "fullName"`,
+                    [organizationId, displayName, email.toLowerCase()],
+                );
+                user = insert.rows[0];
+                try {
+                    await pool.query(`INSERT INTO dashboard_preferences (user_id, layout) VALUES ($1, '{"hero":["performance","calendar"],"secondary":["approvals","notifications"]}'::jsonb)`, [user.id]);
+                }
+                catch (e) {
+                    // ignore preference failures
+                }
+                await logEvent({
+                    organizationId: user.organizationId,
+                    actorUserId: user.id,
+                    eventKey: "user_oauth_created",
+                    context: { provider, email: user.email },
+                });
+            }
+
+            const token = signToken({
+                sub: user.id,
+                organizationId: user.organizationId,
+                role: user.role,
+                email: user.email,
+            });
+
+            const redirectTo = (verified.redirect as string) ?? env.FRONTEND_URL;
+            const encodedName = encodeURIComponent(user.fullName ?? "");
+            return response.redirect(`${redirectTo}/login?token=${encodeURIComponent(token)}&email=${encodeURIComponent(user.email)}&name=${encodedName}`);
+        }
+
         const integrationResult = await pool.query(`
           SELECT id
           FROM integrations

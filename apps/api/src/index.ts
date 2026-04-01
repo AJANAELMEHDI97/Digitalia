@@ -9,7 +9,7 @@ import { exportsRouter } from "./routes/exports.js";
 import { normalizeLegacyWorkspaceData } from "./lib/normalize.js";
 import { ensureApplicationSchema } from "./lib/schema.js";
 import { ensureUploadsDir } from "./lib/storage.js";
-import { seedDatabase } from "./lib/seed.js";
+import { seedDatabase, ensureEssentialUsers } from "./lib/seed.js";
 import { authRouter } from "./routes/auth.js";
 import { calendarRouter } from "./routes/calendar.js";
 import { dashboardRouter } from "./routes/dashboard.js";
@@ -101,6 +101,7 @@ const bootstrap = async () => {
     await pool.query("SELECT 1");
     await ensureApplicationSchema();
     await seedDatabase();
+    await ensureEssentialUsers();
     await normalizeLegacyWorkspaceData();
     await publishDueScheduledPosts();
     app.listen(env.PORT, () => {

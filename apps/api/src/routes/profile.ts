@@ -168,6 +168,22 @@ profileRouter.put("/profile", async (request, response) => {
     });
     return response.json(result.rows[0]);
 });
+const onboardingSchema = z.object({
+    steps: z.record(z.unknown()),
+    completed: z.boolean().optional(),
+});
+profileRouter.put("/onboarding", async (request, response) => {
+    const input = parseOrRespond(onboardingSchema, request.body, response);
+    if (!input)
+        return;
+    await pool.query(`
+      UPDATE users
+      SET onboarding_steps = $2::jsonb,
+          updated_at = NOW()
+      WHERE id = $1
+    `, [request.user.id, JSON.stringify(input.steps)]);
+    return response.json({ success: true });
+});
 profileRouter.put("/security", async (request, response) => {
     const input = parseOrRespond(securitySchema, request.body, response);
     if (!input)

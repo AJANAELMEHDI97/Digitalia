@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useSimpleAuth } from "@/hooks/useSimpleAuth";
 import { useToast } from "@/hooks/use-toast";
+import { TOKEN_STORAGE_KEY, refreshStoredSession } from "@/lib/local-auth";
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
@@ -18,11 +19,41 @@ export default function Login() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Compute API base URL for OAuth redirects (always use backend)
+  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:4000";
+
   useEffect(() => {
     if (!loading && user) {
       navigate("/dashboard");
     }
   }, [user, loading, navigate]);
+
+  // handle OAuth redirect tokens
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+    const error = params.get("error");
+    if (error) {
+      toast({ variant: "destructive", title: "Erreur OAuth", description: error });
+      return;
+    }
+    if (token) {
+      try {
+        window.localStorage.setItem(TOKEN_STORAGE_KEY, token);
+      } catch (e) {
+        // ignore storage errors
+      }
+      (async () => {
+        const session = await refreshStoredSession().catch(() => null);
+        if (session) {
+          navigate("/dashboard");
+        } else {
+          toast({ variant: "destructive", title: "Connexion impossible", description: "Impossible de recuperer le profil depuis le token." });
+        }
+      })();
+    }
+  }, [navigate, toast]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -128,6 +159,67 @@ export default function Login() {
             )}
           </Button>
         </form>
+
+        <div className="grid grid-cols-1 gap-3">
+          <Button onClick={() => (window.location.href = `${apiBase}/auth/oauth/google`)} className="w-full h-12 bg-white text-black border">
+            Se connecter avec Google
+          </Button>
+          <Button onClick={() => toast({ title: "Bientôt", description: "Connexion via Apple disponible prochainement." })} className="w-full h-12">
+            Se connecter avec Apple (bientot)
+          </Button>
+          <Button
+            onClick={async () => {
+              try {
+                const phone = window.prompt("Entrez votre numero de telephone (ex: +33123456789)");
+                if (!phone) return;
+                const startRes = await fetch(`${apiBase}/auth/phone/start`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ phone }),
+                });
+                const startJson = await startRes.json();
+                if (!startRes.ok) {
+                  toast({ variant: "destructive", title: "Erreur", description: startJson?.message ?? "Impossible d'envoyer le code." });
+                  return;
+                }
+                if (startJson?.debug?.code) {
+                  // In dev, show the code to the user
+                  window.alert(`Code (dev): ${startJson.debug.code}`);
+                } else {
+                  toast({ title: "Code envoye", description: "Un code a ete envoye par SMS." });
+                }
+                const code = window.prompt("Entrez le code recu par SMS");
+                if (!code) return;
+                const verifyRes = await fetch(`${apiBase}/auth/phone/verify`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ phone, code }),
+                });
+                const verifyJson = await verifyRes.json();
+                if (!verifyRes.ok) {
+                  toast({ variant: "destructive", title: "Erreur de verification", description: verifyJson?.message ?? "Code invalide." });
+                  return;
+                }
+                try {
+                  window.localStorage.setItem(TOKEN_STORAGE_KEY, verifyJson.token);
+                } catch (e) {
+                  // ignore
+                }
+                const session = await refreshStoredSession().catch(() => null);
+                if (session) {
+                  navigate("/dashboard");
+                } else {
+                  toast({ variant: "destructive", title: "Connexion impossible", description: "Impossible de recuperer le profil depuis le token." });
+                }
+              } catch (error: any) {
+                toast({ variant: "destructive", title: "Erreur", description: error?.message ?? String(error) });
+              }
+            }}
+            className="w-full h-12"
+          >
+            Se connecter par telephone
+          </Button>
+        </div>
 
         <div className="text-center text-sm text-muted-foreground">
           <p>

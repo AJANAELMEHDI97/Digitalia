@@ -358,3 +358,52 @@ export const seedDatabase = async () => {
         client.release();
     }
 };
+
+export const ensureEssentialUsers = async () => {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    const orgRes = await client.query(`SELECT id FROM organizations ORDER BY id LIMIT 1`);
+    const organizationId = orgRes.rows[0]?.id ?? null;
+    if (!organizationId) {
+      await client.query("COMMIT");
+      return;
+    }
+
+    // ensure a super admin user exists
+    const adminEmail = "admin@digitalia.test";
+    const adminCheck = await client.query(`SELECT id FROM users WHERE LOWER(email) = $1 LIMIT 1`, [adminEmail]);
+    if (!adminCheck.rowCount) {
+      const adminHash = await bcrypt.hash("Admin1234", 10);
+      const insertAdmin = await client.query(`
+    INSERT INTO users (organization_id, full_name, email, password_hash, role, title, onboarding_steps, theme, notification_preferences)
+    VALUES ($1, $2, $3, $4, 'admin', 'Super Admin', '[]'::jsonb, 'aurora', '{"email": true}'::jsonb)
+    RETURNING id
+    `, [organizationId, "Super Admin", adminEmail, adminHash]);
+      await client.query(`INSERT INTO dashboard_preferences (user_id, layout) VALUES ($1, '{"hero":["performance","calendar"],"secondary":["approvals","notifications"]}'::jsonb)`, [insertAdmin.rows[0].id]);
+    }
+
+    // ensure a lawyer/reader user exists for viewing lawyer dashboard
+    const lawyerEmail = "lawyer@digitalia.test";
+    const lawyerCheck = await client.query(`SELECT id FROM users WHERE LOWER(email) = $1 LIMIT 1`, [lawyerEmail]);
+    if (!lawyerCheck.rowCount) {
+      const lawyerHash = await bcrypt.hash("Lawyer1234", 10);
+      const insertLawyer = await client.query(`
+    INSERT INTO users (organization_id, full_name, email, password_hash, role, title, onboarding_steps, theme, notification_preferences)
+    VALUES ($1, $2, $3, $4, 'reader', 'Lawyer', '[]'::jsonb, 'aurora', '{"email": true}'::jsonb)
+    RETURNING id
+    `, [organizationId, "Maître Demo", lawyerEmail, lawyerHash]);
+      await client.query(`INSERT INTO dashboard_preferences (user_id, layout) VALUES ($1, '{"hero":["performance","calendar"],"secondary":["approvals","notifications"]}'::jsonb)`, [insertLawyer.rows[0].id]);
+    }
+
+    await client.query("COMMIT");
+  }
+  catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  }
+  finally {
+    client.release();
+  }
+};

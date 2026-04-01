@@ -8,7 +8,8 @@ export type SocialPlatformConnection =
   | "linkedin"
   | "facebook"
   | "instagram"
-  | "youtube";
+  | "youtube"
+  | "google";
 
 export interface SocialConnection {
   id: string;
@@ -111,6 +112,14 @@ export const PLATFORM_CONFIGS: Record<SocialPlatformConnection, PlatformConfig> 
     color: "#FF0000",
     bgColor: "bg-[#FF0000]/10",
   },
+  google: {
+    id: "google",
+    name: "Google / Gmail",
+    description: "Connexion Google pour lire et envoyer des emails depuis la boite de reception.",
+    icon: "google",
+    color: "#4285F4",
+    bgColor: "bg-[#4285F4]/10",
+  },
 };
 
 const PLATFORM_ORDER: SocialPlatformConnection[] = [
@@ -118,6 +127,7 @@ const PLATFORM_ORDER: SocialPlatformConnection[] = [
   "facebook",
   "instagram",
   "youtube",
+  "google",
 ];
 
 const getAuthHeaders = (withJson = false) => {
