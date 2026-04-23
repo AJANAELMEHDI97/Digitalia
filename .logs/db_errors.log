@@ -1,0 +1,7 @@
+﻿
+.logs\db.log:19:socialpulse-db  | 2026-03-31 12:26:09.712 UTC [35] WARNING:  
+no usable system locales were found
+.logs\db.log:21:socialpulse-db  | initdb: warning: enabling "trust" 
+authentication for local connections
+
+

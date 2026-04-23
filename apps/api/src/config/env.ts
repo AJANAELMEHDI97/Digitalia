@@ -27,5 +27,9 @@ const envSchema = z.object({
     GOOGLE_CLIENT_ID: z.string().default(""),
     GOOGLE_CLIENT_SECRET: z.string().default(""),
     GOOGLE_REDIRECT_URI: z.string().default(""),
+    ALLOW_PUBLIC_SIGNUP: z
+        .string()
+        .default("true")
+        .transform((value) => value.toLowerCase() === "true"),
 });
 export const env = envSchema.parse(process.env);

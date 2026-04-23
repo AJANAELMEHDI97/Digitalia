@@ -1,0 +1,17 @@
+﻿git : remote: 
+At line:1 char:7
++ try { git push -u origin chore/disable-public-signup-and-db-fix 2>&1  ...
++       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (remote: :String) [], RemoteExcept 
+   ion
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+remote: Create a pull request for 'chore/disable-public-signup-and-db-fix' on 
+GitHub by visiting:        
+remote:      https://github.com/AJANAELMEHDI97/Digitalia/pull/new/chore/disable
+-public-signup-and-db-fix        
+remote: 
+branch 'chore/disable-public-signup-and-db-fix' set up to track 'origin/chore/disable-public-signup-and-db-fix'.
+To https://github.com/AJANAELMEHDI97/Digitalia.git
+ * [new branch]      chore/disable-public-signup-and-db-fix -> 
+chore/disable-public-signup-and-db-fix

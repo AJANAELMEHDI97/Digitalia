@@ -1,0 +1,4 @@
+﻿{
+    "content":  "{\"token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzNDgwNWM4Zi02MTVhLTQyNjgtYTY0OS0xZGRhNThmZmNjMTUiLCJvcmdhbml6YXRpb25JZCI6IjBhNjRkMmJkLWM5ODItNDQ5Yi04MmZjLTQ4ODE0NjY3MzMwOCIsInJvbGUiOiJzdXBlcl9hZG1pbiIsImVtYWlsIjoidGVzdCthcGkyQGV4YW1wbGUuY29tIiwiaWF0IjoxNzc0OTYwMzIzLCJleHAiOjE3NzU1NjUxMjN9.UOruEqzFsmDWNIVqzs8lfex14sOnhLTDQ8piV-Jvvhg\",\"user\":{\"id\":\"34805c8f-615a-4268-a649-1dda58ffcc15\",\"organizationId\":\"0a64d2bd-c982-449b-82fc-488146673308\",\"email\":\"test+api2@example.com\",\"role\":\"super_admin\",\"fullName\":\"Test User\"}}",
+    "status":  200
+}
